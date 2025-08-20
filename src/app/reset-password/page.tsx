@@ -70,7 +70,7 @@ export default function ResetPasswordPage() {
       if (response.ok) {
         showNotification('Senha alterada com sucesso! Redirecionando para o login...', 'success')
         setTimeout(() => {
-          router.push('/')
+          router.push('/login')
         }, 2000)
       } else {
         showNotification(data.error || 'Erro ao redefinir senha', 'error')
@@ -118,7 +118,7 @@ export default function ResetPasswordPage() {
             
             <button 
               className="login-btn" 
-              onClick={() => router.push('/')}
+              onClick={() => router.push('/login')}
               style={{ marginTop: '20px' }}
             >
               Voltar ao Login
@@ -238,13 +238,13 @@ export default function ResetPasswordPage() {
           
           {/* Links */}
           <div className="links">
-            <p>
-              <a href="/">Voltar ao Login</a>
-            </p>
-            <p>
-              Não tem uma conta? 
-              <a href="/registro">Criar conta</a>
-            </p>
+                         <p>
+               <a href="/login">Voltar ao Login</a>
+             </p>
+             <p>
+               Não tem uma conta? 
+               <a href="/registro">Criar conta</a>
+             </p>
           </div>
         </div>
       </div>

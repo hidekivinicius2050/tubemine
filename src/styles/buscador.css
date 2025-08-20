@@ -84,7 +84,7 @@ form {
 
 /* Estilos para a seção da chave da API */
 .api-key-section {
-  grid-column: 1 / -1;
+  grid-column: 1 / 3;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -143,6 +143,76 @@ form {
 .help-text a:hover {
   color: #60a5fa;
   text-decoration: underline;
+}
+
+/* Estilos para a seção de quantidade máxima de vídeos */
+.max-results-section {
+  grid-column: 3 / 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Estilos para o campo SHORTS */
+#shorts {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+  border: 2px solid #4a4a4c;
+  border-radius: 12px;
+  color: #f5f5f7;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+#shorts:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+  background: linear-gradient(135deg, #4a4a4c 0%, #3a3a3c 100%);
+}
+
+#shorts option {
+  background: #2c2c2e;
+  color: #f5f5f7;
+  padding: 8px;
+}
+
+.max-results-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #3a3a3c 0%, #2c2c2e 100%);
+  border: 2px solid #4a4a4c;
+  border-radius: 12px;
+  color: #f5f5f7;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.max-results-input:focus {
+  outline: none;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  background: linear-gradient(135deg, #4a4a4c 0%, #3a3a3c 100%);
+}
+
+.max-results-input::placeholder {
+  color: #86868b;
+}
+
+.max-results-help {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+  font-size: 13px;
+  color: #6ee7b7;
 }
 
 /* Inputs */

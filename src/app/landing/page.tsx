@@ -39,8 +39,8 @@ export default function LandingPage() {
         {/* Contact Section - Get in touch */}
         <Contact />
       </main>
-      
-      {/* Footer */}
+
+       {/* Footer */}
       <Footer />
     </div>
   )

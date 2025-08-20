@@ -46,16 +46,21 @@ export default function BuscadorPage() {
     document.body.style.backgroundColor = '#1d1d1f'
     
     // Verificar se deve mostrar modal de boas-vindas para usuários free
-    if (subscription?.plan === 'free') {
+    if (subscription?.plan === 'free' && !hasShownWelcome) {
       setShowWelcomeModal(true)
       setHasShownWelcome(true)
+    }
+
+    // Verificar se deve mostrar modal de limite
+    if (subscription?.plan === 'free' && subscription?.todaySearches >= 1) {
+      setShowLimitModal(true)
     }
 
     // Carregar script do buscador apenas uma vez
     if (!window.fetchData) {
       loadBuscadorScript()
     }
-  }, [subscription])
+  }, [subscription, hasShownWelcome])
 
   const loadBuscadorScript = () => {
     console.log('🚀 Carregando script do buscador...')
@@ -474,8 +479,16 @@ export default function BuscadorPage() {
         const confirmed = await window.showConfirm('Limpar Formulário', 'Deseja limpar todos os campos e resultados?')
         if (!confirmed) return
         
-                 const form = document.getElementById('filterForm') as HTMLFormElement
-         if (form) form.reset()
+                         const form = document.getElementById('filterForm') as HTMLFormElement
+        if (form) form.reset()
+        
+                 // Resetar campo de quantidade máxima para o valor padrão
+         const maxResultsInput = document.getElementById('maxResults') as HTMLInputElement
+         if (maxResultsInput) maxResultsInput.value = '50'
+         
+         // Resetar campo SHORTS para o valor padrão
+         const shortsSelect = document.getElementById('shorts') as HTMLSelectElement
+         if (shortsSelect) shortsSelect.value = ''
          
          // Resetar paginação
          window.currentPage = 1
@@ -596,8 +609,9 @@ export default function BuscadorPage() {
           const dateTo = (document.getElementById('dateTo') as HTMLInputElement)?.value || ''
                     const minViews = (document.getElementById('minViews') as HTMLInputElement)?.value || ''
            const minLikes = (document.getElementById('minLikes') as HTMLInputElement)?.value || ''
-           const minSubscribers = (document.getElementById('minSubscribers') as HTMLInputElement)?.value || ''
-           const maxSubscribers = (document.getElementById('maxSubscribers') as HTMLInputElement)?.value || ''
+                       const minSubscribers = (document.getElementById('minSubscribers') as HTMLInputElement)?.value || ''
+            const maxSubscribers = (document.getElementById('maxSubscribers') as HTMLInputElement)?.value || ''
+            const shorts = (document.getElementById('shorts') as HTMLSelectElement)?.value || ''
 
            // Validar se a chave da API foi fornecida
            if (!apiKey.trim()) {
@@ -613,21 +627,39 @@ export default function BuscadorPage() {
          let currentPage = 0
          const maxPages = 10 // Buscar até 10 páginas (500 vídeos máximo)
 
+         // Obter quantidade máxima de vídeos do campo
+         const maxResultsElement = document.getElementById('maxResults') as HTMLInputElement
+         const maxResultsInput = maxResultsElement?.value || '50'
+         const userMaxResults = Math.min(parseInt(maxResultsInput) || 50, 500) // Limitar a 500
+         
+         console.log('🔍 Configuração maxResults:', {
+           elementFound: !!maxResultsElement,
+           inputValue: maxResultsInput,
+           parsedValue: parseInt(maxResultsInput),
+           userMaxResults: userMaxResults
+         })
+
                    updateLoadingMessage('Buscando vídeos na API do YouTube...')
 
                                        do {
              currentPage++
 
              try {
-               const params = new URLSearchParams({
-                 part: 'snippet',
-                 q: keywords,
-                 type: 'video',
-                 maxResults: '50', // Máximo permitido pela API
-                 key: apiKey,
-                 order: 'relevance',
-                 videoDuration: 'any'
-               })
+                            // Calcular quantos vídeos ainda precisamos buscar
+             const remainingVideos = userMaxResults - allVideos.length
+             const currentPageMaxResults = Math.min(remainingVideos, 50) // YouTube API max é 50 por página
+             
+             console.log(`📄 Página ${currentPage}: buscando ${currentPageMaxResults} vídeos (${allVideos.length}/${userMaxResults} já obtidos)`)
+             
+             const params = new URLSearchParams({
+               part: 'snippet',
+               q: keywords,
+               type: 'video',
+               maxResults: currentPageMaxResults.toString(),
+               key: apiKey,
+               order: 'relevance',
+               videoDuration: 'any'
+             })
 
                // Adicionar token da próxima página se existir
                if (nextPageToken) {
@@ -689,6 +721,14 @@ export default function BuscadorPage() {
                allVideos = allVideos.concat(data.items)
                nextPageToken = data.nextPageToken
 
+               console.log(`✅ Página ${currentPage}: obtidos ${data.items.length} vídeos. Total: ${allVideos.length}/${userMaxResults}`)
+
+               // Parar se já atingimos o limite desejado pelo usuário
+               if (allVideos.length >= userMaxResults) {
+                 console.log(`🎯 Limite de ${userMaxResults} vídeos atingido. Parando busca.`)
+                 break
+               }
+
                // Aguardar um pouco entre as requisições para não sobrecarregar a API
                if (nextPageToken && currentPage < maxPages) {
                  await new Promise(resolve => setTimeout(resolve, 200))
@@ -699,7 +739,7 @@ export default function BuscadorPage() {
                throw new Error('Erro ao buscar vídeos. Verifique sua chave da API e tente novamente.')
              }
 
-           } while (nextPageToken && currentPage < maxPages)
+           } while (nextPageToken && currentPage < maxPages && allVideos.length < userMaxResults)
 
                      updateLoadingMessage(`Encontrados ${allVideos.length} vídeos. Buscando estatísticas...`)
 
@@ -851,11 +891,19 @@ export default function BuscadorPage() {
             parseInt(video.subscriberCount) >= parseInt(minSubscribers)
           )
         }
-        if (maxSubscribers) {
-          filteredVideos = filteredVideos.filter((video: any) => 
-            parseInt(video.subscriberCount) <= parseInt(maxSubscribers)
-          )
-        }
+                 if (maxSubscribers) {
+           filteredVideos = filteredVideos.filter((video: any) => 
+             parseInt(video.subscriberCount) <= parseInt(maxSubscribers)
+           )
+         }
+         
+         // Filtro para Shorts
+         if (shorts === 'no') {
+           filteredVideos = filteredVideos.filter((video: any) => {
+             const durationInSeconds = window.parseDuration(video.duration)
+             return durationInSeconds > 60 // Excluir vídeos com menos de 1 minuto (Shorts)
+           })
+         }
 
                  console.log(`🎯 Vídeos após filtros: ${filteredVideos.length}`)
          updateLoadingMessage(`Processando ${filteredVideos.length} vídeos...`)
@@ -879,6 +927,12 @@ export default function BuscadorPage() {
             console.log('🔄 Atualizando status da assinatura...')
             await refreshSubscription()
             console.log('✅ Busca registrada e assinatura atualizada')
+            
+            // Verificar se deve mostrar modal de limite após a busca
+            if (subscription?.plan === 'free' && subscription?.todaySearches >= 1) {
+              console.log('⚠️ Limite atingido, mostrando modal...')
+              setShowLimitModal(true)
+            }
           } catch (error) {
             console.error('❌ Erro ao registrar busca:', error)
           }
@@ -1603,6 +1657,24 @@ export default function BuscadorPage() {
                   </div>
                </div>
                
+               <div className="max-results-section">
+                 <input
+                   type="number"
+                   id="maxResults"
+                   placeholder="Quantidade máxima de vídeos"
+                   defaultValue="50"
+                   min="1"
+                   max="500"
+                   className="max-results-input"
+                 />
+                 <div className="max-results-help">
+                   <span className="help-icon">ℹ️</span>
+                   <span className="help-text">
+                     Máximo 500 vídeos por busca (padrão: 50)
+                   </span>
+                 </div>
+               </div>
+               
                <input
                  type="text"
                  id="keywords"
@@ -1614,12 +1686,496 @@ export default function BuscadorPage() {
                  <option value="pt">Português</option>
                  <option value="en">Inglês</option>
                  <option value="es">Espanhol</option>
+                 <option value="fr">Francês</option>
+                 <option value="de">Alemão</option>
+                 <option value="it">Italiano</option>
+                 <option value="ru">Russo</option>
+                 <option value="ja">Japonês</option>
+                 <option value="ko">Coreano</option>
+                 <option value="zh">Chinês</option>
+                 <option value="ar">Árabe</option>
+                 <option value="hi">Hindi</option>
+                 <option value="th">Tailandês</option>
+                 <option value="vi">Vietnamita</option>
+                 <option value="tr">Turco</option>
+                 <option value="pl">Polonês</option>
+                 <option value="nl">Holandês</option>
+                 <option value="sv">Sueco</option>
+                 <option value="da">Dinamarquês</option>
+                 <option value="no">Norueguês</option>
+                 <option value="fi">Finlandês</option>
+                 <option value="cs">Tcheco</option>
+                 <option value="hu">Húngaro</option>
+                 <option value="ro">Romeno</option>
+                 <option value="bg">Búlgaro</option>
+                 <option value="hr">Croata</option>
+                 <option value="sk">Eslovaco</option>
+                 <option value="sl">Esloveno</option>
+                 <option value="et">Estoniano</option>
+                 <option value="lv">Letão</option>
+                 <option value="lt">Lituano</option>
+                 <option value="mt">Maltês</option>
+                 <option value="el">Grego</option>
+                 <option value="he">Hebraico</option>
+                 <option value="fa">Persa</option>
+                 <option value="ur">Urdu</option>
+                 <option value="bn">Bengali</option>
+                 <option value="ta">Tâmil</option>
+                 <option value="te">Telugu</option>
+                 <option value="ml">Malaiala</option>
+                 <option value="kn">Canarês</option>
+                 <option value="gu">Gujarati</option>
+                 <option value="pa">Punjabi</option>
+                 <option value="mr">Marathi</option>
+                 <option value="ne">Nepali</option>
+                 <option value="si">Sinhala</option>
+                 <option value="my">Birmanês</option>
+                 <option value="km">Khmer</option>
+                 <option value="lo">Laosiano</option>
+                 <option value="mn">Mongol</option>
+                 <option value="ka">Georgiano</option>
+                 <option value="hy">Armênio</option>
+                 <option value="az">Azerbaijano</option>
+                 <option value="kk">Cazaque</option>
+                 <option value="ky">Quirguiz</option>
+                 <option value="uz">Uzbeque</option>
+                 <option value="tg">Tajique</option>
+                 <option value="tk">Turcomeno</option>
+                 <option value="af">Africâner</option>
+                 <option value="sw">Suaíli</option>
+                 <option value="zu">Zulu</option>
+                 <option value="xh">Xhosa</option>
+                 <option value="yo">Iorubá</option>
+                 <option value="ig">Igbo</option>
+                 <option value="ha">Hauçá</option>
+                 <option value="am">Amárico</option>
+                 <option value="or">Oriá</option>
+                 <option value="as">Assamês</option>
+                 <option value="sa">Sânscrito</option>
+                 <option value="sd">Sindi</option>
+                 <option value="ps">Pashto</option>
+                 <option value="ku">Curdo</option>
+                 <option value="ckb">Curdo Central</option>
+                 <option value="ug">Uigur</option>
+                 <option value="bo">Tibetano</option>
+                 <option value="dz">Dzongkha</option>
+                 <option value="jv">Javanês</option>
+                 <option value="su">Sundanês</option>
+                 <option value="id">Indonésio</option>
+                 <option value="ms">Malaio</option>
+                 <option value="tl">Tagalo</option>
+                 <option value="ceb">Cebuano</option>
+                 <option value="war">Waray</option>
+                 <option value="hil">Hiligaynon</option>
+                 <option value="bcl">Bicolano Central</option>
+                 <option value="pam">Kapampangan</option>
+                 <option value="pag">Pangasinan</option>
+                 <option value="ilo">Ilocano</option>
+                 <option value="cbk">Chavacano</option>
+                 <option value="bjn">Banjar</option>
+                 <option value="ace">Achinês</option>
+                 <option value="min">Minangkabau</option>
+                 <option value="gor">Gorontalo</option>
+                 <option value="bug">Bugis</option>
+                 <option value="mak">Makassar</option>
+                 <option value="ban">Bali</option>
+                 <option value="mad">Madurês</option>
+                 <option value="sas">Sasak</option>
+                 <option value="sun">Sundanês</option>
+                 <option value="jav">Javanês</option>
+                 <option value="btk">Batak</option>
+                 <option value="iba">Iban</option>
+                 <option value="kbd">Kabardino</option>
+                 <option value="ady">Adigue</option>
+                 <option value="ab">Abecásio</option>
+                 <option value="os">Osseto</option>
+                 <option value="inh">Inguche</option>
+                 <option value="ce">Checheno</option>
+                 <option value="av">Avar</option>
+                 <option value="lez">Lezguiano</option>
+                 <option value="tab">Tabassaran</option>
+                 <option value="dar">Dargwa</option>
+                 <option value="lbe">Lak</option>
+                 <option value="rut">Rutul</option>
+                 <option value="tsakhur">Tsakhur</option>
+                 <option value="udi">Udi</option>
+                 <option value="agx">Aghul</option>
+                 <option value="tkr">Tsakhur</option>
+                 <option value="kum">Kumyk</option>
+                 <option value="nog">Nogai</option>
+                 <option value="crh">Tatar da Crimeia</option>
+                 <option value="gag">Gagauz</option>
+                 <option value="cjs">Shor</option>
+                 <option value="alt">Altai</option>
+                 <option value="tyv">Tuvano</option>
+                 <option value="xal">Kalmyk</option>
+                 <option value="bua">Buriat</option>
+                 <option value="sah">Iacuto</option>
+                 <option value="evn">Evenki</option>
+                 <option value="eve">Even</option>
+                 <option value="neg">Negidal</option>
+                 <option value="ulc">Ulch</option>
+                 <option value="niv">Nivkh</option>
+                 <option value="ket">Ket</option>
+                 <option value="sel">Selkup</option>
+                 <option value="kca">Khanty</option>
+                 <option value="mns">Mansi</option>
+                 <option value="yrk">Nenets</option>
+                 <option value="koi">Komi-Permyak</option>
+                 <option value="kpv">Komi-Zyrian</option>
+                 <option value="udm">Udmurt</option>
+                 <option value="mhr">Mari Oriental</option>
+                 <option value="mrj">Mari Ocidental</option>
+                 <option value="chm">Mari</option>
+                 <option value="mdf">Moksha</option>
+                 <option value="myv">Erzya</option>
+                 <option value="vep">Veps</option>
+                 <option value="vot">Votic</option>
+                 <option value="izh">Ingrian</option>
+                 <option value="krl">Karelian</option>
+                 <option value="liv">Livonian</option>
+                 <option value="fiu">Finno-Ugric</option>
+                 <option value="sma">Southern Sami</option>
+                 <option value="smj">Lule Sami</option>
+                 <option value="sme">Northern Sami</option>
+                 <option value="smn">Inari Sami</option>
+                 <option value="sms">Skolt Sami</option>
+                 <option value="fit">Tornedalen Finnish</option>
+                 <option value="kven">Kven</option>
+                 <option value="mns">Mansi</option>
+                 <option value="kca">Khanty</option>
+                 <option value="yrk">Nenets</option>
+                 <option value="sel">Selkup</option>
+                 <option value="ket">Ket</option>
+                 <option value="niv">Nivkh</option>
+                 <option value="ulc">Ulch</option>
+                 <option value="neg">Negidal</option>
+                 <option value="eve">Even</option>
+                 <option value="evn">Evenki</option>
+                 <option value="sah">Iacuto</option>
+                 <option value="bua">Buriat</option>
+                 <option value="xal">Kalmyk</option>
+                 <option value="tyv">Tuvano</option>
+                 <option value="alt">Altai</option>
+                 <option value="cjs">Shor</option>
+                 <option value="gag">Gagauz</option>
+                 <option value="crh">Tatar da Crimeia</option>
+                 <option value="nog">Nogai</option>
+                 <option value="kum">Kumyk</option>
+                 <option value="tkr">Tsakhur</option>
+                 <option value="agx">Aghul</option>
+                 <option value="udi">Udi</option>
+                 <option value="tsakhur">Tsakhur</option>
+                 <option value="rut">Rutul</option>
+                 <option value="lbe">Lak</option>
+                 <option value="dar">Dargwa</option>
+                 <option value="tab">Tabassaran</option>
+                 <option value="lez">Lezguiano</option>
+                 <option value="av">Avar</option>
+                 <option value="ce">Checheno</option>
+                 <option value="inh">Inguche</option>
+                 <option value="os">Osseto</option>
+                 <option value="ab">Abecásio</option>
+                 <option value="ady">Adigue</option>
+                 <option value="kbd">Kabardino</option>
+                 <option value="iba">Iban</option>
+                 <option value="btk">Batak</option>
+                 <option value="jav">Javanês</option>
+                 <option value="sun">Sundanês</option>
+                 <option value="sas">Sasak</option>
+                 <option value="mad">Madurês</option>
+                 <option value="ban">Bali</option>
+                 <option value="mak">Makassar</option>
+                 <option value="bug">Bugis</option>
+                 <option value="gor">Gorontalo</option>
+                 <option value="min">Minangkabau</option>
+                 <option value="ace">Achinês</option>
+                 <option value="bjn">Banjar</option>
+                 <option value="cbk">Chavacano</option>
+                 <option value="ilo">Ilocano</option>
+                 <option value="pag">Pangasinan</option>
+                 <option value="pam">Kapampangan</option>
+                 <option value="bcl">Bicolano Central</option>
+                 <option value="hil">Hiligaynon</option>
+                 <option value="war">Waray</option>
+                 <option value="ceb">Cebuano</option>
+                 <option value="tl">Tagalo</option>
+                 <option value="ms">Malaio</option>
+                 <option value="id">Indonésio</option>
+                 <option value="su">Sundanês</option>
+                 <option value="jv">Javanês</option>
+                 <option value="dz">Dzongkha</option>
+                 <option value="bo">Tibetano</option>
+                 <option value="ug">Uigur</option>
+                 <option value="ckb">Curdo Central</option>
+                 <option value="ku">Curdo</option>
+                 <option value="ps">Pashto</option>
+                 <option value="sd">Sindi</option>
+                 <option value="sa">Sânscrito</option>
+                 <option value="as">Assamês</option>
+                 <option value="or">Oriá</option>
+                 <option value="am">Amárico</option>
+                 <option value="ha">Hauçá</option>
+                 <option value="ig">Igbo</option>
+                 <option value="yo">Iorubá</option>
+                 <option value="xh">Xhosa</option>
+                 <option value="zu">Zulu</option>
+                 <option value="sw">Suaíli</option>
+                 <option value="af">Africâner</option>
+                 <option value="tk">Turcomeno</option>
+                 <option value="tg">Tajique</option>
+                 <option value="uz">Uzbeque</option>
+                 <option value="ky">Quirguiz</option>
+                 <option value="kk">Cazaque</option>
+                 <option value="az">Azerbaijano</option>
+                 <option value="hy">Armênio</option>
+                 <option value="ka">Georgiano</option>
+                 <option value="mn">Mongol</option>
+                 <option value="lo">Laosiano</option>
+                 <option value="km">Khmer</option>
+                 <option value="my">Birmanês</option>
+                 <option value="si">Sinhala</option>
+                 <option value="ne">Nepali</option>
+                 <option value="mr">Marathi</option>
+                 <option value="pa">Punjabi</option>
+                 <option value="gu">Gujarati</option>
+                 <option value="kn">Canarês</option>
+                 <option value="ml">Malaiala</option>
+                 <option value="te">Telugu</option>
+                 <option value="ta">Tâmil</option>
+                 <option value="bn">Bengali</option>
+                 <option value="ur">Urdu</option>
+                 <option value="fa">Persa</option>
+                 <option value="he">Hebraico</option>
+                 <option value="el">Grego</option>
+                 <option value="mt">Maltês</option>
+                 <option value="lt">Lituano</option>
+                 <option value="lv">Letão</option>
+                 <option value="et">Estoniano</option>
+                 <option value="sl">Esloveno</option>
+                 <option value="sk">Eslovaco</option>
+                 <option value="hr">Croata</option>
+                 <option value="bg">Búlgaro</option>
+                 <option value="ro">Romeno</option>
+                 <option value="hu">Húngaro</option>
+                 <option value="cs">Tcheco</option>
+                 <option value="fi">Finlandês</option>
+                 <option value="no">Norueguês</option>
+                 <option value="da">Dinamarquês</option>
+                 <option value="sv">Sueco</option>
+                 <option value="nl">Holandês</option>
+                 <option value="pl">Polonês</option>
+                 <option value="tr">Turco</option>
+                 <option value="vi">Vietnamita</option>
+                 <option value="th">Tailandês</option>
+                 <option value="hi">Hindi</option>
+                 <option value="ar">Árabe</option>
+                 <option value="zh">Chinês</option>
+                 <option value="ko">Coreano</option>
+                 <option value="ja">Japonês</option>
+                 <option value="ru">Russo</option>
+                 <option value="it">Italiano</option>
+                 <option value="de">Alemão</option>
+                 <option value="fr">Francês</option>
                </select>
                               <select id="country">
                   <option value="">Todos os países</option>
+                  <option value="AF">Afeganistão</option>
+                  <option value="AL">Albânia</option>
+                  <option value="DZ">Argélia</option>
+                  <option value="AD">Andorra</option>
+                  <option value="AO">Angola</option>
+                  <option value="AG">Antígua e Barbuda</option>
+                  <option value="AR">Argentina</option>
+                  <option value="AM">Armênia</option>
+                  <option value="AU">Austrália</option>
+                  <option value="AT">Áustria</option>
+                  <option value="AZ">Azerbaijão</option>
+                  <option value="BS">Bahamas</option>
+                  <option value="BH">Bahrein</option>
+                  <option value="BD">Bangladesh</option>
+                  <option value="BB">Barbados</option>
+                  <option value="BY">Bielorrússia</option>
+                  <option value="BE">Bélgica</option>
+                  <option value="BZ">Belize</option>
+                  <option value="BJ">Benin</option>
+                  <option value="BT">Butão</option>
+                  <option value="BO">Bolívia</option>
+                  <option value="BA">Bósnia e Herzegovina</option>
+                  <option value="BW">Botswana</option>
                   <option value="BR">Brasil</option>
-                  <option value="US">Estados Unidos</option>
+                  <option value="BN">Brunei</option>
+                  <option value="BG">Bulgária</option>
+                  <option value="BF">Burkina Faso</option>
+                  <option value="BI">Burundi</option>
+                  <option value="KH">Camboja</option>
+                  <option value="CM">Camarões</option>
+                  <option value="CA">Canadá</option>
+                  <option value="CV">Cabo Verde</option>
+                  <option value="CF">República Centro-Africana</option>
+                  <option value="TD">Chade</option>
+                  <option value="CL">Chile</option>
+                  <option value="CN">China</option>
+                  <option value="CO">Colômbia</option>
+                  <option value="KM">Comores</option>
+                  <option value="CG">Congo</option>
+                  <option value="CR">Costa Rica</option>
+                  <option value="CI">Costa do Marfim</option>
+                  <option value="HR">Croácia</option>
+                  <option value="CU">Cuba</option>
+                  <option value="CY">Chipre</option>
+                  <option value="CZ">República Tcheca</option>
+                  <option value="CD">República Democrática do Congo</option>
+                  <option value="DK">Dinamarca</option>
+                  <option value="DJ">Djibouti</option>
+                  <option value="DM">Dominica</option>
+                  <option value="DO">República Dominicana</option>
+                  <option value="EC">Equador</option>
+                  <option value="EG">Egito</option>
+                  <option value="SV">El Salvador</option>
+                  <option value="GQ">Guiné Equatorial</option>
+                  <option value="ER">Eritreia</option>
+                  <option value="EE">Estônia</option>
+                  <option value="ET">Etiópia</option>
+                  <option value="FJ">Fiji</option>
+                  <option value="FI">Finlândia</option>
+                  <option value="FR">França</option>
+                  <option value="GA">Gabão</option>
+                  <option value="GM">Gâmbia</option>
+                  <option value="GE">Geórgia</option>
+                  <option value="DE">Alemanha</option>
+                  <option value="GH">Gana</option>
+                  <option value="GR">Grécia</option>
+                  <option value="GD">Granada</option>
+                  <option value="GT">Guatemala</option>
+                  <option value="GN">Guiné</option>
+                  <option value="GW">Guiné-Bissau</option>
+                  <option value="GY">Guiana</option>
+                  <option value="HT">Haiti</option>
+                  <option value="HN">Honduras</option>
+                  <option value="HU">Hungria</option>
+                  <option value="IS">Islândia</option>
+                  <option value="IN">Índia</option>
+                  <option value="ID">Indonésia</option>
+                  <option value="IR">Irã</option>
+                  <option value="IQ">Iraque</option>
+                  <option value="IE">Irlanda</option>
+                  <option value="IL">Israel</option>
+                  <option value="IT">Itália</option>
+                  <option value="JM">Jamaica</option>
+                  <option value="JP">Japão</option>
+                  <option value="JO">Jordânia</option>
+                  <option value="KZ">Cazaquistão</option>
+                  <option value="KE">Quênia</option>
+                  <option value="KI">Kiribati</option>
+                  <option value="KP">Coreia do Norte</option>
+                  <option value="KR">Coreia do Sul</option>
+                  <option value="KW">Kuwait</option>
+                  <option value="KG">Quirguistão</option>
+                  <option value="LA">Laos</option>
+                  <option value="LV">Letônia</option>
+                  <option value="LB">Líbano</option>
+                  <option value="LS">Lesoto</option>
+                  <option value="LR">Libéria</option>
+                  <option value="LY">Líbia</option>
+                  <option value="LI">Liechtenstein</option>
+                  <option value="LT">Lituânia</option>
+                  <option value="LU">Luxemburgo</option>
+                  <option value="MK">Macedônia do Norte</option>
+                  <option value="MG">Madagascar</option>
+                  <option value="MW">Malawi</option>
+                  <option value="MY">Malásia</option>
+                  <option value="MV">Maldivas</option>
+                  <option value="ML">Mali</option>
+                  <option value="MT">Malta</option>
+                  <option value="MH">Ilhas Marshall</option>
+                  <option value="MR">Mauritânia</option>
+                  <option value="MU">Maurício</option>
                   <option value="MX">México</option>
+                  <option value="FM">Micronésia</option>
+                  <option value="MD">Moldávia</option>
+                  <option value="MC">Mônaco</option>
+                  <option value="MN">Mongólia</option>
+                  <option value="ME">Montenegro</option>
+                  <option value="MA">Marrocos</option>
+                  <option value="MZ">Moçambique</option>
+                  <option value="MM">Myanmar</option>
+                  <option value="NA">Namíbia</option>
+                  <option value="NR">Nauru</option>
+                  <option value="NP">Nepal</option>
+                  <option value="NL">Países Baixos</option>
+                  <option value="NZ">Nova Zelândia</option>
+                  <option value="NI">Nicarágua</option>
+                  <option value="NE">Níger</option>
+                  <option value="NG">Nigéria</option>
+                  <option value="NO">Noruega</option>
+                  <option value="OM">Omã</option>
+                  <option value="PK">Paquistão</option>
+                  <option value="PW">Palau</option>
+                  <option value="PS">Palestina</option>
+                  <option value="PA">Panamá</option>
+                  <option value="PG">Papua-Nova Guiné</option>
+                  <option value="PY">Paraguai</option>
+                  <option value="PE">Peru</option>
+                  <option value="PH">Filipinas</option>
+                  <option value="PL">Polônia</option>
+                  <option value="PT">Portugal</option>
+                  <option value="QA">Catar</option>
+                  <option value="RO">Romênia</option>
+                  <option value="RU">Rússia</option>
+                  <option value="RW">Ruanda</option>
+                  <option value="KN">São Cristóvão e Névis</option>
+                  <option value="LC">Santa Lúcia</option>
+                  <option value="VC">São Vicente e Granadinas</option>
+                  <option value="WS">Samoa</option>
+                  <option value="SM">San Marino</option>
+                  <option value="ST">São Tomé e Príncipe</option>
+                  <option value="SA">Arábia Saudita</option>
+                  <option value="SN">Senegal</option>
+                  <option value="RS">Sérvia</option>
+                  <option value="SC">Seicheles</option>
+                  <option value="SL">Serra Leoa</option>
+                  <option value="SG">Singapura</option>
+                  <option value="SK">Eslováquia</option>
+                  <option value="SI">Eslovênia</option>
+                  <option value="SB">Ilhas Salomão</option>
+                  <option value="SO">Somália</option>
+                  <option value="ZA">África do Sul</option>
+                  <option value="SS">Sudão do Sul</option>
+                  <option value="ES">Espanha</option>
+                  <option value="LK">Sri Lanka</option>
+                  <option value="SD">Sudão</option>
+                  <option value="SR">Suriname</option>
+                  <option value="SZ">Eswatini</option>
+                  <option value="SE">Suécia</option>
+                  <option value="CH">Suíça</option>
+                  <option value="SY">Síria</option>
+                  <option value="TW">Taiwan</option>
+                  <option value="TJ">Tajiquistão</option>
+                  <option value="TZ">Tanzânia</option>
+                  <option value="TH">Tailândia</option>
+                  <option value="TL">Timor-Leste</option>
+                  <option value="TG">Togo</option>
+                  <option value="TO">Tonga</option>
+                  <option value="TT">Trinidad e Tobago</option>
+                  <option value="TN">Tunísia</option>
+                  <option value="TR">Turquia</option>
+                  <option value="TM">Turcomenistão</option>
+                  <option value="TV">Tuvalu</option>
+                  <option value="UG">Uganda</option>
+                  <option value="UA">Ucrânia</option>
+                  <option value="AE">Emirados Árabes Unidos</option>
+                  <option value="GB">Reino Unido</option>
+                  <option value="US">Estados Unidos</option>
+                  <option value="UY">Uruguai</option>
+                  <option value="UZ">Uzbequistão</option>
+                  <option value="VU">Vanuatu</option>
+                  <option value="VA">Vaticano</option>
+                  <option value="VE">Venezuela</option>
+                  <option value="VN">Vietnã</option>
+                  <option value="YE">Iêmen</option>
+                  <option value="ZM">Zâmbia</option>
+                  <option value="ZW">Zimbábue</option>
                 </select>
                <input
                  type="date"
@@ -1646,11 +2202,16 @@ export default function BuscadorPage() {
                   id="minSubscribers"
                   placeholder="Inscritos mínimos"
                 />
-                <input
-                  type="number"
-                  id="maxSubscribers"
-                  placeholder="Inscritos máximos"
-                />
+                                 <input
+                   type="number"
+                   id="maxSubscribers"
+                   placeholder="Inscritos máximos"
+                 />
+                 <select id="shorts">
+                   <option value="">Todos os vídeos</option>
+                   <option value="no">Excluir Shorts</option>
+                   <option value="yes">Incluir Shorts</option>
+                 </select>
                <button type="button" id="searchBtn" className="primary">
                  Buscar
                </button>

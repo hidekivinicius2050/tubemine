@@ -1,3 +1,13 @@
+#!/bin/bash
+
+# Script para corrigir a API de usuários
+cd /var/www/tubemine
+
+# Fazer backup do arquivo atual
+cp src/app/api/admin/users/route.ts src/app/api/admin/users/route.ts.backup
+
+# Criar o arquivo corrigido
+cat > src/app/api/admin/users/route.ts << 'EOF'
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/database'
 
@@ -14,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.substring(7)
     const db = await getDatabase()
-    
+
     // Verificar token e obter usuário
     const session = await db.get(
       'SELECT user_id FROM user_sessions WHERE token = ?',
@@ -43,7 +53,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-        // Buscar todos os usuários
+    // Buscar todos os usuários
     const users = await db.all(`
       SELECT
         u.id,
@@ -111,3 +121,10 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+EOF
+
+echo "✅ Arquivo corrigido!"
+echo "🔄 Reiniciando aplicação..."
+pm2 restart tubemine-saas
+
+echo "✅ Pronto! Teste agora a API."

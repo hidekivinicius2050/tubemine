@@ -146,7 +146,7 @@ export function useAuth() {
       setToken(null)
       setUser(null)
       setSubscription(null)
-      router.push('/')
+      router.push('/landing')
     }
   }, [token, router])
 

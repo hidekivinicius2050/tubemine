@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-        // Buscar todos os usuários
+    // Buscar todos os usuários
     const users = await db.all(`
       SELECT
         u.id,

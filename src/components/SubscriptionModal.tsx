@@ -136,11 +136,14 @@ export default function SubscriptionModal({ isOpen, onClose, type }: Subscriptio
           {type === 'limit-reached' && (
             <div className="limit-info">
               <p>
-                <strong>Buscas hoje:</strong> {subscription?.todaySearches || 0} / {subscription?.limit || 1}
+                <strong>Buscas restantes:</strong> {Math.max(0, (subscription?.limit || 1) - (subscription?.todaySearches || 0))} / {subscription?.limit || 1}
               </p>
-              <p>
-                <strong>Status:</strong> {subscription?.message}
-              </p>
+                              <p>
+                  <strong>Status:</strong> {(() => {
+                    const remainingSearches = Math.max(0, (subscription?.limit || 1) - (subscription?.todaySearches || 0))
+                    return remainingSearches === 0 ? 'Limite diário atingido. Faça upgrade para PRO!' : `Você tem ${remainingSearches} busca(s) restante(s) hoje`
+                  })()}
+                </p>
             </div>
           )}
 

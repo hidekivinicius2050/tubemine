@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({ router }) => {
 
   // Auth button handlers
   const handleLogin = () => {
-    router.push('/')
+    router.push('/login')
   }
 
   const handleRegister = () => {

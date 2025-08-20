@@ -1,3 +1,16 @@
+#!/bin/bash
+
+echo "🔧 Aplicando correção na API de usuários automaticamente..."
+
+# Conectar ao servidor e aplicar correção
+sshpass -p "Master230514@" ssh -o StrictHostKeyChecking=no root@72.60.10.222 << 'EOF'
+cd /var/www/tubemine
+
+echo "📋 Fazendo backup do arquivo atual..."
+cp src/app/api/admin/users/route.ts src/app/api/admin/users/route.ts.backup
+
+echo "🔧 Aplicando correção..."
+cat > src/app/api/admin/users/route.ts << 'ROUTE_EOF'
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/database'
 
@@ -43,7 +56,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-        // Buscar todos os usuários
+    // Buscar todos os usuários
     const users = await db.all(`
       SELECT
         u.id,
@@ -111,3 +124,21 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+ROUTE_EOF
+
+echo "🔄 Reiniciando aplicação..."
+pm2 restart tubemine-saas
+
+echo "⏳ Aguardando aplicação inicializar..."
+sleep 5
+
+echo "🔑 Obtendo novo token..."
+TOKEN=$(curl -s -X POST http://localhost:3000/api/auth/login -H "Content-Type: application/json" -d '{"email":"admin@tubemine.com","password":"b50x20Hi@"}' | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+
+echo "🧪 Testando API de usuários..."
+curl -s -X GET http://localhost:3000/api/admin/users -H "Authorization: Bearer $TOKEN" | grep -A 10 -B 5 "hideki"
+
+echo "✅ Correção aplicada e testada!"
+EOF
+
+echo "🎉 Processo concluído!"

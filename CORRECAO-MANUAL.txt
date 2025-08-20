@@ -1,0 +1,34 @@
+CORREÇÃO MANUAL - SIGA ESTES PASSOS:
+
+1. Abra o PowerShell e execute:
+   ssh root@72.60.10.222
+   
+2. Digite a senha quando solicitado:
+   Master230514@
+
+3. Execute estes comandos um por vez:
+
+   cd /var/www/tubemine
+   
+   cp src/app/api/admin/users/route.ts src/app/api/admin/users/route.ts.backup
+   
+   nano src/app/api/admin/users/route.ts
+
+4. No editor nano:
+   - Pressione Ctrl + K várias vezes para apagar todo o conteúdo
+   - Cole o código corrigido (está no arquivo users-route-corrected.ts)
+   - Pressione Ctrl + X para sair
+   - Pressione Y para confirmar
+   - Pressione Enter para salvar
+
+5. Reinicie a aplicação:
+   pm2 restart tubemine-saas
+
+6. Teste a correção:
+   curl -X POST http://localhost:3000/api/auth/login -H "Content-Type: application/json" -d '{"email":"admin@tubemine.com","password":"b50x20Hi@"}' | grep -o '"token":"[^"]*"' | cut -d'"' -f4
+
+7. Use o token obtido para testar:
+   curl -X GET http://localhost:3000/api/admin/users -H "Authorization: Bearer SEU_TOKEN_AQUI" | grep -A 10 -B 5 "hideki"
+
+RESULTADO ESPERADO:
+O usuário "hideki" deve aparecer com "plan_type":"pro" em vez de "plan_type":"free"

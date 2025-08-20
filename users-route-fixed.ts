@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.substring(7)
     const db = await getDatabase()
-    
+
     // Verificar token e obter usuário
     const session = await db.get(
       'SELECT user_id FROM user_sessions WHERE token = ?',
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-        // Buscar todos os usuários
+    // Buscar todos os usuários
     const users = await db.all(`
       SELECT
         u.id,

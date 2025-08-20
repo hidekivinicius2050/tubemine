@@ -1,3 +1,32 @@
+# 🔧 Instruções para Corrigir a API de Usuários
+
+## Problema
+A API de listagem de usuários não mostra os upgrades de plano (PRO) corretamente. Está mostrando sempre "free" mesmo quando o usuário foi atualizado para "pro".
+
+## Solução
+Precisamos modificar o arquivo `src/app/api/admin/users/route.ts` no servidor.
+
+## Passos para Aplicar a Correção:
+
+### 1. Conectar ao Servidor
+```bash
+ssh root@72.60.10.222
+```
+
+### 2. Fazer Backup
+```bash
+cd /var/www/tubemine
+cp src/app/api/admin/users/route.ts src/app/api/admin/users/route.ts.backup
+```
+
+### 3. Editar o Arquivo
+```bash
+nano src/app/api/admin/users/route.ts
+```
+
+### 4. Substituir Todo o Conteúdo Por:
+
+```typescript
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/database'
 
@@ -43,7 +72,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-        // Buscar todos os usuários
+    // Buscar todos os usuários
     const users = await db.all(`
       SELECT
         u.id,
@@ -111,3 +140,33 @@ export async function GET(request: NextRequest) {
     )
   }
 }
+```
+
+### 5. Salvar o Arquivo
+- Pressione `Ctrl + X`
+- Pressione `Y` para confirmar
+- Pressione `Enter` para salvar
+
+### 6. Reiniciar a Aplicação
+```bash
+pm2 restart tubemine-saas
+```
+
+### 7. Testar a Correção
+```bash
+# Obter novo token
+curl -X POST http://localhost:3000/api/auth/login -H "Content-Type: application/json" -d '{"email":"admin@tubemine.com","password":"b50x20Hi@"}' | grep -o '"token":"[^"]*"' | cut -d'"' -f4
+
+# Testar API (substitua TOKEN_AQUI pelo token obtido acima)
+curl -X GET http://localhost:3000/api/admin/users -H "Authorization: Bearer TOKEN_AQUI" | grep -A 10 -B 5 "hideki"
+```
+
+## Resultado Esperado
+O usuário "hideki" deve aparecer com `"plan_type":"pro"` em vez de `"plan_type":"free"`.
+
+## Se Algo Der Errado
+Para reverter as mudanças:
+```bash
+cp src/app/api/admin/users/route.ts.backup src/app/api/admin/users/route.ts
+pm2 restart tubemine-saas
+```
