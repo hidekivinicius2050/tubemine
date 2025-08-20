@@ -1,0 +1,1020 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TubeMine Buscador de Vídeos</title>
+  <link rel="stylesheet" href="/buscador.css?v=2">
+  <script>
+    // Força recarregamento do cache
+    if (performance.navigation.type === 1) {
+      // Recarregamento manual - limpar cache
+      localStorage.removeItem('youtubeSearchCache');
+    }
+  </script>
+  <style>
+    *, *:before, *:after {
+      box-sizing: border-box;
+    }
+    body { 
+      background-color: #f5f5f7; 
+      color: #1d1d1f;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+      margin: 0;
+      padding: 20px;
+      line-height: 1.2;
+    }
+    header { 
+      text-align: center; 
+      margin-bottom: 24px;
+      padding: 24px 0;
+      border-radius: 12px;
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: #ffffff;
+      position: relative;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.5px;
+    }
+    .subtitle {
+      font-size: 18px;
+      color: #86868b;
+      margin: 0;
+    }
+    main {
+      max-width: 1200px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    form { 
+      display: grid; 
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+      max-width: 1200px;
+      padding: 16px;
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    @media (max-width: 768px) {
+      form {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      input, select, button {
+        font-size: 16px;
+      }
+      .results-container {
+      }
+      .results-container table {
+        min-width: 600px;
+      }
+    }
+    input, select, button { 
+      padding: 14px 18px; 
+      font-size: 17px; 
+      width: 100%; 
+      background-color: #fff; 
+      border: 2px solid #d2d2d7; 
+      color: #1d1d1f;
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+    input::placeholder {
+      color: #86868b;
+      opacity: 1;
+    }
+    input:focus, select:focus, button:focus {
+      outline: none;
+      border-color: #0071e3;
+      box-shadow: 0 0 0 4px rgba(0, 125, 250, 0.1);
+    }
+    button {
+      font-weight: 500;
+      cursor: pointer;
+    }
+    button.primary { 
+      background-color: #04AA6D; 
+      border: none; 
+      color: #fff; 
+    }
+    button.secondary { 
+      background-color: #0071e3;
+      border: none; 
+      color: #fff;
+      font-weight: 500;
+    }
+    button.primary:hover { 
+      background-color: #32CD32;
+      transform: translateY(-1px);
+    }
+    button.secondary:hover { 
+      background-color: #1E90FF;
+      transform: translateY(-1px);
+    }
+    button {
+      transition: all 0.2s ease;
+    }
+    .results-inline {
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow: visible;
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+.results-inline,
+.filters-container-flex {
+  overflow: visible;
+}
+
+.filters-container-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly; 
+  padding: 12px 16px;
+  background-color: #fff;
+  border-radius: 12px 12px 0 0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+
+.filter-item {
+  display: inline-flex;
+  align-items: center;
+  font-size: 16px;
+  padding: 4px 8px;
+}
+
+.filter-item label {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 8px;
+}
+
+/* fallback para espaçamento se gap não funcionar */
+.filter-item + .filter-item {
+  margin-left: 0;
+}
+
+/* Make sure the text is clickable as before */
+.filter-item .clickable {
+  cursor: pointer;
+  color: #0071e3;
+  font-weight: 500;
+}
+
+.filter-item .clickable:hover {
+  text-decoration: underline;
+}
+
+.filter-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  margin: 0;
+  margin-right: 8px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px; 
+}
+
+/* Update dark mode styles */
+body.dark-mode .filters-container-flex {
+  background-color: #2c2c2e;
+}
+
+body.dark-mode .filter-item .clickable {
+  color: #1E90FF;
+}
+
+      .results-container {
+      background-color: #ffffff;
+      border-radius: 0 0 12px 12px;
+      max-height: none !important;
+      overflow-y: visible;
+    }
+    table { 
+      width: 100%; 
+      border-collapse: collapse; 
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+    
+    .metrics-table td {
+	text-align: center;
+	padding: 8px 4px;
+	width: 16.66%;
+    }
+
+    #resultsTable thead {
+      display: none;
+    }
+    #resultsTable th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #86868b;
+    }
+    #resultsTable tbody tr {
+      border-bottom: 1px solid #f5f5f7;
+    }
+    #resultsTable tbody tr:last-child {
+      border-bottom: none;
+    }
+    .thumbnail-cell {
+      width: 256px;
+      padding: 0;
+    }
+    .thumbnail-container {
+      position: relative;
+      display: block;
+      width: 256px;
+      height: 144px;
+      margin: 0;
+      padding: 0;
+    }
+    .thumbnail-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 4px;
+      transition: opacity 0.2s ease;
+      display: block;
+    }
+    .thumbnail-container:hover {
+      transform: scale(1.02);
+    }
+    .thumbnail-container:hover img {
+      opacity: 0.9;
+    }
+    .download-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .thumbnail-container:hover .download-overlay {
+      opacity: 1;
+    }
+    .download-icon {
+      color: white;
+      font-size: 24px;
+    }
+    .title-cell {
+      font-weight: 600;
+      text-align: left;
+      white-space: normal;
+      text-overflow: ellipsis;
+      margin-bottom: 8px;
+      padding-left: 16px;
+    }
+
+    .title-cell a.link-btn.channel-link {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+}
+body.dark-mode .title-cell a.link-btn.channel-link {
+  color: #999;
+}
+  
+    a.link-btn { 
+      color: #0071e3; 
+      text-decoration: none; 
+      font-weight: 500; 
+      margin-left: 8px;
+    }
+    a.link-btn:hover { 
+      text-decoration: underline; 
+    }
+    .error { 
+      background-color: #ff3b30; 
+      color: white; 
+      padding: 16px; 
+      margin-bottom: 24px; 
+      display: none;
+      border-radius: 12px;
+    }
+    .theme-switch {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .theme-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #888;
+      transition: .4s;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+    }
+    input:checked + .slider {
+      background-color: #ddd;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .slider.round {
+      border-radius: 24px;
+    }
+    .slider.round:before {
+      border-radius: 50%;
+    }
+    body.dark-mode {
+      background-color: #1d1d1f;
+      color: #f5f5f7;
+    }
+    body.dark-mode header,
+    body.dark-mode form,
+    body.dark-mode .filters-container,
+    body.dark-mode .results-container {
+      background-color: #2c2c2e;
+    }
+    body.dark-mode input,
+    body.dark-mode select {
+      background-color: #2c2c2e;
+      color: #f5f5f7;
+      border-color: #3a3a3c;
+    }
+    body.dark-mode #resultsTable tbody tr {
+      border-color: #3a3a3c;
+    }
+    body.dark-mode input[type="date"]::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+    }    
+    body.dark-mode a.link-btn {
+      color: #1E90FF;
+    }
+  </style>
+</head>
+<body>
+  <header class="hovered-element">
+    <h1>Buscador de Vídeos Virais</h1>
+    <p class="subtitle">Encontre os vídeos mais populares do YouTube. <strong>Nota:</strong> Não compartilhe suas chaves de API publicamente.</p>
+    <label class="theme-switch" for="themeToggle">
+      <input type="checkbox" id="themeToggle" aria-label="Toggle dark mode">
+      <span class="slider round"></span>
+    </label>
+  </header>
+  <main class="container">
+    <div id="errorMsg" class="error" role="alert"></div>
+    <form id="filterForm" action="#" method="get">
+      <input type="text" id="apiKey" placeholder="Chave API do YouTube (obrigatória)" />
+      <button type="button" id="saveKeyBtn" class="secondary">Salvar YouTube Key</button>
+      <input type="text" id="geminiKey" placeholder="Chave API do Gemini (opcional)" />
+      <button type="button" id="saveGeminiBtn" class="secondary">Salvar Gemini Key</button>
+      <input type="text" id="keywords" placeholder="Palavras-chave para busca" />
+      <input type="text" id="maxResults" placeholder="Número de vídeos" min="1" max="50" value="50"/>
+      <select id="language">
+        <option value="">Idioma</option>
+        <option value="pt">Português</option>
+        <option value="en">Inglês</option>
+        <option value="es">Espanhol</option>
+        <option value="fr">Francês</option>
+        <option value="de">Alemão</option>
+        <option value="it">Italiano</option>
+        <option value="ja">Japonês</option>
+        <option value="ko">Coreano</option>
+        <option value="zh">Chinês</option>
+        <option value="ru">Rússia</option>
+        <option value="ar">Árabe</option>
+        <option value="hi">Hindi</option>
+        <option value="tr">Turco</option>
+        <option value="nl">Holandês</option>
+        <option value="sv">Sueco</option>
+        <option value="pl">Polonês</option>
+      </select>
+      <select id="country">
+        <option value="">País</option>
+        <option value="BR">Brasil</option>
+        <option value="US">Estados Unidos</option>
+        <option value="GB">Reino Unido</option>
+        <option value="DE">Alemanha</option>
+        <option value="IN">Índia</option>
+        <option value="CA">Canadá</option>
+        <option value="AU">Austrália</option>
+        <option value="MX">México</option>
+        <option value="JP">Japão</option>
+        <option value="KR">Coreia do Sul</option>
+        <option value="CN">China</option>
+        <option value="RU">Rússia</option>
+        <option value="FR">França</option>
+        <option value="ES">Espanha</option>
+        <option value="IT">Itália</option>
+        <option value="AR">Argentina</option>
+        <option value="CL">Chile</option>
+        <option value="CO">Colômbia</option>
+        <option value="ZA">África do Sul</option>
+        <option value="PL">Polônia</option>
+      </select>
+      <input type="date" id="startDate" />
+      <input type="date" id="endDate" />
+      <input type="text" id="minViews" placeholder="Visualizações mínimas" />
+      <input type="text" id="minLikes" placeholder="Likes mínimos" />
+      <input type="text" id="minSubscribers" placeholder="Inscritos mínimos" />
+      <input type="text" id="maxSubscribers" placeholder="Inscritos máximos" />
+              <button type="button" class="primary" id="searchBtn">Buscar</button>
+      <button type="button" onclick="resetForm()" class="secondary">Limpar Filtros</button>
+    </form>
+    <div class="results-inline">
+      <div class="filters-container-flex">
+  <div class="filter-item">
+    <input type="checkbox" id="filter-duration" checked>
+    <label for="filter-duration">Duração</label>
+    <span class="clickable" onclick="toggleSort('duration')">↓↑</span>
+  </div>
+  <div class="filter-item">
+    <input type="checkbox" id="filter-date" checked>
+    <label for="filter-date">Upload</label>
+    <span class="clickable" onclick="toggleSort('date')">↓↑</span>
+  </div>
+  <div class="filter-item">
+    <input type="checkbox" id="filter-views" checked>
+    <label for="filter-views">Views</label>
+    <span class="clickable" onclick="toggleSort('views')">↓↑</span>
+  </div>
+  <div class="filter-item">
+    <input type="checkbox" id="filter-likes" checked>
+    <label for="filter-likes">Likes</label>
+    <span class="clickable" onclick="toggleSort('likes')">↓↑</span>
+  </div>
+  <div class="filter-item">
+    <input type="checkbox" id="filter-comments" checked>
+    <label for="filter-comments">Comentários</label>
+    <span class="clickable" onclick="toggleSort('comments')">↓↑</span>
+  </div>
+  <div class="filter-item">
+    <input type="checkbox" id="filter-channel" checked>
+    <label for="filter-channel">Canal Criado</label>
+    <span class="clickable" onclick="toggleSort('channel')">↓↑</span>
+  </div>
+  <div class="filter-item">
+    <input type="checkbox" id="filter-subscribers" checked>
+    <label for="filter-subscribers">Inscritos</label>
+    <span class="clickable" onclick="toggleSort('subscribers')">↓↑</span>
+  </div>
+</div>
+</div>
+
+<div class="results-container">
+    <table id="resultsTable">
+      <tbody></tbody>
+    </table>
+  </div>
+
+    </div>
+  </main>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedYT = localStorage.getItem('ytApiKey');
+      if (savedYT) document.getElementById('apiKey').value = savedYT;
+      document.getElementById('saveKeyBtn').addEventListener('click', () => {
+        const key = document.getElementById('apiKey').value.trim();
+        if (!key) return alert('Insira uma chave YouTube.');
+        localStorage.setItem('ytApiKey', key);
+        alert('Chave YouTube salva!');
+      });
+      const savedGem = localStorage.getItem('geminiApiKey');
+      if (savedGem) document.getElementById('geminiKey').value = savedGem;
+      document.getElementById('saveGeminiBtn').addEventListener('click', () => {
+        const key = document.getElementById('geminiKey').value.trim();
+        if (!key) return alert('Insira uma chave Gemini.');
+        localStorage.setItem('geminiApiKey', key);
+        alert('Chave Gemini salva!');
+      });
+
+      const numberInputs = [document.getElementById('minViews'), document.getElementById('minLikes'), document.getElementById('minSubscribers'), document.getElementById('maxSubscribers'), document.getElementById('maxResults')];
+      numberInputs.forEach(input => {
+        input.addEventListener('input', (e) => {
+          const value = e.target.value.replace(/\D/g, '');
+          if (value) {
+            e.target.value = Number(value).toLocaleString('pt-BR');
+          }
+        });
+      });
+
+      const filterKeys = ['duration', 'date', 'views', 'likes', 'comments', 'subscribers', 'channel'];
+      filterKeys.forEach(key => {
+        const checkbox = document.getElementById(`filter-${key}`);
+        if (checkbox) {
+          const saved = localStorage.getItem(`filter-${key}`);
+          checkbox.checked = saved !== 'false';
+          checkbox.addEventListener('change', () => {
+            localStorage.setItem(`filter-${key}`, checkbox.checked);
+            if (currentVideos.length) renderInline(currentVideos);
+          });
+        }
+        const sortSaved = localStorage.getItem(`sort-${key}`);
+        window[`${key}SortAsc`] = sortSaved === null ? false : sortSaved === 'true';
+        const span = document.querySelector(`#filter-${key} ~ .clickable`);
+        if (span) {
+          span.textContent = span.textContent.replace(/↓↑|↑↓/g, '');
+          span.textContent += window[`${key}SortAsc`] ? ' ↑↓' : ' ↓↑';
+        }
+      });
+
+      const searchButton = document.querySelector('button.primary');
+      searchButton.addEventListener('click', debounce(fetchData, 300));
+
+      // Initialize theme
+      const themeToggle = document.getElementById('themeToggle');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const currentTheme = localStorage.getItem('theme') || (prefersDark ? 'dark' : 'light');
+      if (currentTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeToggle.checked = true;
+      }
+
+      themeToggle.addEventListener('change', () => {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+    });
+
+    function debounce(func, wait) {
+      let timeout;
+      return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+      };
+    }
+
+    function validateForm() {
+      const keywords = document.getElementById('keywords').value.trim();
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const maxResultsRaw = document.getElementById('maxResults').value.replace(/\./g, '');
+      const maxResults = Number(maxResultsRaw) || 50;
+      if (!keywords) {
+        alert('Insira palavras-chave.');
+        return false;
+      }
+      if (!apiKey) {
+        alert('Insira sua chave YouTube.');
+        return false;
+      }
+      if (maxResults < 1 || maxResults > 50) {
+        alert('Número de vídeos deve estar entre 1 e 50.');
+        return false;
+      }
+      return true;
+    }
+
+    function resetForm() {
+      const apiKey = document.getElementById('apiKey').value;
+      const geminiKey = document.getElementById('geminiKey').value;
+      document.getElementById('filterForm').reset();
+      document.getElementById('apiKey').value = apiKey;
+      document.getElementById('geminiKey').value = geminiKey;
+      document.getElementById('maxResults').value = Number(50).toLocaleString('pt-BR');
+      document.querySelector('#resultsTable tbody').innerHTML = '';
+      document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    function formatDuration(isoDuration) {
+      const match = isoDuration.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
+      if (!match) return 'N/D';
+      const [, h, m, s] = match.map(x => parseInt(x) || 0);
+      return `${h ? h + ':' : ''}${(h && m < 10 ? '0' : '') + m}:${s < 10 ? '0' + s : s}`;
+    }
+    
+    // Função para mostrar loading
+    function showLoading(message = 'Buscando Vídeos...') {
+      const loadingOverlay = document.createElement('div')
+      loadingOverlay.id = 'loadingOverlay'
+      loadingOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      `
+      
+      const loadingSpinner = document.createElement('div')
+      loadingSpinner.style.cssText = `
+        background: linear-gradient(135deg, #2c2c2e 0%, #1d1d1f 100%);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.6);
+        border: 1px solid #3a3a3c;
+        text-align: center;
+        transform: scale(0.8);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      `
+      
+      loadingSpinner.innerHTML = `
+        <div style="margin-bottom: 20px;">
+          <div style="
+            width: 60px;
+            height: 60px;
+            border: 4px solid #3a3a3c;
+            border-top: 4px solid #ef4444;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+          "></div>
+        </div>
+        <h3 style="margin: 0 0 12px 0; color: #f5f5f7; font-size: 18px; font-weight: 700;">${message}</h3>
+        <p style="margin: 0; color: #86868b; font-size: 14px; line-height: 1.5;">Estamos procurando pelos melhores vídeos para você</p>
+        <style>
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        </style>
+      `
+      
+      loadingOverlay.appendChild(loadingSpinner)
+      document.body.appendChild(loadingOverlay)
+      
+      // Animar entrada
+      setTimeout(() => {
+        loadingOverlay.style.opacity = '1'
+        loadingSpinner.style.transform = 'scale(1)'
+      }, 10)
+    }
+    
+    function hideLoading() {
+      const loadingOverlay = document.getElementById('loadingOverlay')
+      if (loadingOverlay) {
+        loadingOverlay.style.opacity = '0'
+        const spinner = loadingOverlay.querySelector('div')
+        if (spinner) {
+          spinner.style.transform = 'scale(0.8)'
+        }
+        
+        setTimeout(() => {
+          if (document.body.contains(loadingOverlay)) {
+            document.body.removeChild(loadingOverlay)
+          }
+        }, 300)
+      }
+    }
+    
+    function updateLoadingMessage(message) {
+      const loadingOverlay = document.getElementById('loadingOverlay')
+      if (loadingOverlay) {
+        const title = loadingOverlay.querySelector('h3')
+        if (title) {
+          title.textContent = message
+        }
+      }
+    }
+
+    async function fetchData() {
+      if (!validateForm()) return;
+      
+      // Mostrar loading
+      showLoading('Iniciando busca...')
+      
+      const errorEl = document.getElementById('errorMsg');
+      const button = document.querySelector('button.primary');
+      errorEl.style.display = 'none';
+      button.disabled = true;
+      button.textContent = 'Buscando...';
+      try {
+        const apiKey = document.getElementById('apiKey').value.trim();
+        let keywords = document.getElementById('keywords').value.trim();
+        const language = document.getElementById('language').value;
+        const country = document.getElementById('country').value;
+        const minViewsRaw = document.getElementById('minViews').value.replace(/\./g, '');
+        const minLikesRaw = document.getElementById('minLikes').value.replace(/\./g, '');
+        const minSubscribersRaw = document.getElementById('minSubscribers').value.replace(/\./g, '');
+        const maxSubscribersRaw = document.getElementById('maxSubscribers').value.replace(/\./g, '');
+        const minViews = Number(minViewsRaw) || 0;
+        const minLikes = Number(minLikesRaw) || 0;
+        const minSubscribers = Number(minSubscribersRaw) || 0;
+        const maxSubscribers = Number(maxSubscribersRaw) || 0;
+        const maxResultsRaw = document.getElementById('maxResults').value.replace(/\./g, '');
+        let maxResults = Number(maxResultsRaw) || 50;
+        maxResults = Math.min(50, Math.max(1, maxResults));
+        const gemKey = document.getElementById('geminiKey').value.trim();
+
+        const cacheKey = 'youtubeSearchCache';
+        const cache = JSON.parse(localStorage.getItem(cacheKey) || '{}');
+        const cacheTime = 1000 * 60 * 60;
+        const params = { apiKey, keywords, language, country, startDate: document.getElementById('startDate').value, endDate: document.getElementById('endDate').value, minViews, minLikes, minSubscribers, maxSubscribers, maxResults };
+        const cacheId = JSON.stringify(params);
+
+        if (cache[cacheId] && Date.now() - cache[cacheId].timestamp < cacheTime) {
+          console.log({ event: 'fetchData', source: 'cache', params });
+          renderInline(cache[cacheId].data);
+          return;
+        }
+
+        if (gemKey) console.log('Gemini Key disponível:', gemKey);
+
+        if (language) {
+          try {
+            const resp = await fetch(
+              `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${language}&dt=t&q=${encodeURIComponent(keywords)}`
+            );
+            const arr = await resp.json();
+            keywords = arr[0].map(p => p[0]).join('');
+          } catch (err) {
+            console.warn('Falha na tradução:', err);
+          }
+        }
+
+        const searchParams = new URLSearchParams({ key: apiKey, part: 'snippet', q: keywords, type: 'video', maxResults: maxResults.toString(), videoDuration: 'long' });
+        if (language) searchParams.append('relevanceLanguage', language);
+        if (country) searchParams.append('regionCode', country);
+        if (params.startDate) searchParams.append('publishedAfter', `${params.startDate}T00:00:00Z`);
+        if (params.endDate) searchParams.append('publishedBefore', `${params.endDate}T23:59:59Z`);
+
+        const searchRes = await fetch(`https://www.googleapis.com/youtube/v3/search?${searchParams}`);
+        if (!searchRes.ok) {
+          if (searchRes.status === 403) throw new Error('Acesso proibido: verifique suas chaves e permissões.');
+          else throw new Error('Erro na busca: ' + searchRes.status);
+        }
+        const searchData = await searchRes.json();
+        console.log({ event: 'fetchData', source: 'api', params, response: searchData });
+        if (!searchData.items?.length) {
+          alert('Nenhum vídeo encontrado.');
+          return;
+        }
+
+        const videoIds = searchData.items.filter(i => i.id?.videoId).map(i => i.id.videoId);
+        const channelIds = searchData.items.filter(i => i.snippet?.channelId).map(i => i.snippet.channelId);
+        const idsParam = videoIds.join(",");
+        const channelIdsParam = channelIds.join(",");
+
+        const statsRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/videos?${new URLSearchParams({ key: apiKey, part: 'snippet,statistics,contentDetails', id: idsParam })}`
+        );
+        if (!statsRes.ok) {
+          throw new Error('Erro ao obter estatísticas: ' + statsRes.status);
+        }
+        const statsData = await statsRes.json();
+
+        const channelRes = await fetch(
+          `https://www.googleapis.com/youtube/v3/channels?${new URLSearchParams({ key: apiKey, part: 'snippet,statistics', id: channelIdsParam })}`
+        );
+        if (!channelRes.ok) {
+          throw new Error('Erro ao obter informações do canal: ' + channelRes.status);
+        }
+        const channelData = await channelRes.json();
+
+        const channelMap = new Map();
+        const channelSubscribersMap = new Map();
+        channelData.items.forEach(channel => {
+          channelMap.set(channel.id, new Date(channel.snippet.publishedAt).toLocaleDateString());
+          channelSubscribersMap.set(channel.id, Number(channel.statistics?.subscriberCount) || 0);
+        });
+
+        const videos = statsData.items.map(s => ({
+          id: s.id,
+          title: s.snippet?.title || 'N/D',
+          thumbnail: s.snippet?.thumbnails?.high?.url || s.snippet?.thumbnails?.default?.url || '',
+          views: Number(s.statistics.viewCount) || 0,
+          likes: Number(s.statistics.likeCount) || 0,
+          comments: Number(s.statistics.commentCount) || 0,
+          duration: formatDuration(s.contentDetails?.duration || ''),
+          publishedAt: new Date(s.snippet?.publishedAt).toLocaleDateString() || 'N/D',
+          channelCreationDate: channelMap.get(s.snippet.channelId) || 'N/D',
+	  channelTitle: s.snippet?.channelTitle || 'N/D',
+	  channelId: s.snippet?.channelId || 'N/D',
+	  subscribers: channelSubscribersMap.get(s.snippet.channelId) || 0
+        })).filter(v => v.views >= minViews && v.likes >= minLikes && v.subscribers >= minSubscribers && (maxSubscribers === 0 || v.subscribers <= maxSubscribers));
+
+        cache[cacheId] = { data: videos, timestamp: Date.now() };
+        localStorage.setItem(cacheKey, JSON.stringify(cache));
+        renderInline(videos);
+      } catch (err) {
+        console.error({ event: 'fetchDataError', error: err.message });
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Buscar';
+        hideLoading();
+      }
+    }
+
+    let currentVideos = [];
+
+    function toggleSort(key) {
+      window[`${key}SortAsc`] = !window[`${key}SortAsc`];
+      localStorage.setItem(`sort-${key}`, window[`${key}SortAsc`]);
+      
+      const span = document.querySelector(`#filter-${key} ~ .clickable`);
+      if (span) {
+        span.textContent = span.textContent.replace(/↓↑|↑↓/g, '');
+        span.textContent += window[`${key}SortAsc`] ? ' ↑↓' : ' ↓↑';
+      }
+      
+      if (currentVideos.length) {
+        sortVideos(key);
+      }
+    }
+
+    function sortVideos(key) {
+      if (!currentVideos.length) return;
+      
+      switch(key) {
+        case 'duration':
+          currentVideos.sort((a, b) => {
+            const aSec = convertDurationToSeconds(a.duration);
+            const bSec = convertDurationToSeconds(b.duration);
+            return durationSortAsc ? aSec - bSec : bSec - aSec;
+          });
+          break;
+          
+        case 'date':
+          currentVideos.sort((a, b) => {
+            const parseDate = (dateStr) => {
+              if (!dateStr) return new Date(0);
+              const [day, month, year] = dateStr.split('/');
+              return new Date(`${year}-${month}-${day}`);
+            };
+            const aDate = parseDate(a.publishedAt);
+            const bDate = parseDate(b.publishedAt);
+            return dateSortAsc ? aDate - bDate : bDate - aDate;
+          });
+          break;
+          
+        case 'views':
+          currentVideos.sort((a, b) => viewsSortAsc ? a.views - b.views : b.views - a.views);
+          break;
+          
+        case 'likes':
+          currentVideos.sort((a, b) => likesSortAsc ? a.likes - b.likes : b.likes - a.likes);
+          break;
+          
+        case 'comments':
+          currentVideos.sort((a, b) => commentsSortAsc ? a.comments - b.comments : b.comments - a.comments);
+          break;
+          
+        case 'channel':
+          currentVideos.sort((a, b) => {
+            const parseDate = (dateStr) => {
+              if (!dateStr || dateStr === 'N/D') return new Date(0);
+              const [day, month, year] = dateStr.split('/');
+              return new Date(`${year}-${month}-${day}`);
+            };
+            const aDate = parseDate(a.channelCreationDate);
+            const bDate = parseDate(b.channelCreationDate);
+            return channelSortAsc ? aDate - bDate : bDate - aDate;
+          });
+          break;
+          
+        case 'subscribers':
+          currentVideos.sort((a, b) => subscribersSortAsc ? a.subscribers - b.subscribers : b.subscribers - a.subscribers);
+          break;
+      }
+      
+      renderInline(currentVideos);
+    }
+
+    function convertDurationToSeconds(duration) {
+      if (!duration) return 0;
+      const parts = duration.split(':');
+      let seconds = 0;
+      if (parts.length === 3) {
+        seconds += parseInt(parts[0]) * 3600;
+        seconds += parseInt(parts[1]) * 60;
+        seconds += parseInt(parts[2]);
+      } else if (parts.length === 2) {
+        seconds += parseInt(parts[0]) * 60;
+        seconds += parseInt(parts[1]);
+      }
+      return seconds;
+    }
+
+   async function downloadThumbnail(urlOrId) {
+  // Extract videoId from URL if a full URL is provided
+  let videoId = urlOrId;
+  const urlPattern = /https:\/\/i\.ytimg\.com\/vi\/([^\/]+)\/[^\/]+\.jpg/;
+  if (urlPattern.test(urlOrId)) {
+    const match = urlOrId.match(urlPattern);
+    videoId = match ? match[1] : urlOrId; // Extract videoId or fallback to input
+  }
+
+  const sizes = ['maxresdefault.jpg', 'sddefault.jpg', 'hqdefault.jpg', 'default.jpg'];
+  for (const size of sizes) {
+    const thumbUrl = `https://i.ytimg.com/vi/${videoId}/${size}`;
+    try {
+      const response = await fetch(thumbUrl, { method: 'HEAD' }); // Check if URL exists
+      if (response.ok) {
+        const blobResponse = await fetch(thumbUrl); // Fetch the actual image
+        if (blobResponse.ok) {
+          const blob = await blobResponse.blob();
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `${videoId}.jpg`; // Use video ID as filename
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(a.href); // Clean up
+          return true; // Success
+        }
+      }
+    } catch (err) {
+      console.log(`Failed to download ${size} thumbnail for video ${videoId}:`, err);
+    }
+  }
+  // User feedback
+  alert(`Could not download thumbnail for video ${videoId}. Please try another video.`);
+  console.error('Could not download any thumbnail size for video:', videoId);
+  return false; // Failure
+}
+
+    function renderInline(data) {
+      currentVideos = [...data];
+      const tbody = document.querySelector('#resultsTable tbody');
+      if (!tbody) return;
+
+      const filters = {
+        duration: document.getElementById('filter-duration')?.checked ?? true,
+        date: document.getElementById('filter-date')?.checked ?? true,
+        views: document.getElementById('filter-views')?.checked ?? true,
+        likes: document.getElementById('filter-likes')?.checked ?? true,
+        comments: document.getElementById('filter-comments')?.checked ?? true,
+        channel: document.getElementById('filter-channel')?.checked ?? true,
+        subscribers: document.getElementById('filter-subscribers')?.checked ?? true
+      };
+
+      tbody.innerHTML = '';
+      data.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="thumbnail-cell">
+            <div class="thumbnail-container">
+              <img src="${v.thumbnail}" alt="Thumbnail de ${v.title}" loading="lazy">
+              <div class="download-overlay" onclick="downloadThumbnail('${v.thumbnail}')">
+                <span class="download-icon">↓</span>
+              </div>
+            </div>
+          </td>
+          <td>
+            <div class="title-cell">${v.title} 
+	    <br>
+	    <a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" class="link-btn">Abrir</a> | <a href="${v.channelId !== 'N/D' ? `https://www.youtube.com/channel/${v.channelId}` : '#'}" target="_blank" class="link-btn" style="color: #86868b; font-weight: 400;">Canal: ${v.channelTitle}</a>
+	    </div>
+            <table class="metrics-table">
+              <tr>
+                <td style="${filters.duration ? '' : 'display: none;'}">Duração:<br>${v.duration}</td>
+                <td style="${filters.date ? '' : 'display: none;'}">Publicado:<br>${v.publishedAt}</td>
+                <td style="${filters.views ? '' : 'display: none;'}">Views:<br>${v.views.toLocaleString('pt-BR')}</td>
+                <td style="${filters.likes ? '' : 'display: none;'}">Likes:<br>${v.likes.toLocaleString('pt-BR')}</td>
+                <td style="${filters.comments ? '' : 'display: none;'}">Comentários:<br>${v.comments.toLocaleString('pt-BR')}</td>
+                <td style="${filters.subscribers ? '' : 'display: none;'}">Inscritos:<br>${v.subscribers.toLocaleString('pt-BR')}</td>
+                <td style="${filters.channel ? '' : 'display: none;'}">Canal Criado<br>${v.channelCreationDate}</td>
+              </tr>
+            </table>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+</html>
