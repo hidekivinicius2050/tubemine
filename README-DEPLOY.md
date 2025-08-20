@@ -22,8 +22,8 @@ Você pode fazer upload dos arquivos de várias formas:
 ```bash
 # Na VPS
 cd /var/www
-git clone https://github.com/seu-usuario/tubemine-saas.git
-cd tubemine-saas
+git clone https://github.com/hidekivinicius2050/tubemine.git
+cd tubemine
 ```
 
 #### Opção B: Via SCP
@@ -70,6 +70,18 @@ NEXT_PUBLIC_APP_URL=https://seu-dominio.com
 chmod +x deploy.sh
 ./deploy.sh
 ```
+
+# Criar diretório do projeto
+echo "📁 Criando diretório do projeto..."
+sudo mkdir -p /var/www/tubemine
+sudo mkdir -p /var/log/tubemine
+
+# Definir permissões
+sudo chown -R $USER:$USER /var/www/tubemine
+sudo chown -R $USER:$USER /var/log/tubemine
+
+# Navegar para o diretório
+cd /var/www/tubemine
 
 ### 5. Configurar Nginx (Recomendado)
 ```bash

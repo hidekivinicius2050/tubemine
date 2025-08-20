@@ -22,15 +22,15 @@ sudo npm install -g pm2
 
 # Criar diretório do projeto
 echo "📁 Criando diretório do projeto..."
-sudo mkdir -p /var/www/tubemine-saas
-sudo mkdir -p /var/log/tubemine-saas
+sudo mkdir -p /var/www/tubemine
+sudo mkdir -p /var/log/tubemine
 
 # Definir permissões
-sudo chown -R $USER:$USER /var/www/tubemine-saas
-sudo chown -R $USER:$USER /var/log/tubemine-saas
+sudo chown -R $USER:$USER /var/www/tubemine
+sudo chown -R $USER:$USER /var/log/tubemine
 
 # Navegar para o diretório
-cd /var/www/tubemine-saas
+cd /var/www/tubemine
 
 # Instalar dependências
 echo "📦 Instalando dependências..."

@@ -4,7 +4,7 @@ module.exports = {
       name: 'tubemine-saas',
       script: 'npm',
       args: 'start',
-      cwd: '/var/www/tubemine-saas',
+      cwd: '/var/www/tubemine',
       instances: 1,
       autorestart: true,
       watch: false,
@@ -13,9 +13,9 @@ module.exports = {
         NODE_ENV: 'production',
         PORT: 3000
       },
-      error_file: '/var/log/tubemine-saas/err.log',
-      out_file: '/var/log/tubemine-saas/out.log',
-      log_file: '/var/log/tubemine-saas/combined.log',
+      error_file: '/var/log/tubemine/err.log',
+      out_file: '/var/log/tubemine/out.log',
+      log_file: '/var/log/tubemine/combined.log',
       time: true
     }
   ]
