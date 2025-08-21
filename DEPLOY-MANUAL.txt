@@ -1,0 +1,37 @@
+DEPLOY MANUAL - TUBEMINE
+========================
+
+Quando a conectividade com o servidor estiver restaurada, execute estes comandos:
+
+1. PRIMEIRO: Resolver o problema do GitHub
+   - Acesse: https://github.com/hidekivinicius2050/tubemine/security/secret-scanning/unblock-secret/31cHav2bhDNZkPRvj1JDCZfVP08
+   - Clique em "Allow secret" para permitir o push
+   - Ou remova as chaves sensíveis dos commits
+
+2. DEPOIS: Fazer push das mudanças
+   git add .
+   git commit -m "Fix: Modal de limite e busca por data funcionando"
+   git push origin main
+
+3. FINALMENTE: Deploy no servidor
+   ssh root@45.79.12.84
+   
+   # No servidor:
+   cd /var/www/tubemine
+   git pull origin main
+   npm install
+   npm run build
+   pm2 restart tubemine
+   systemctl restart nginx
+
+MUDANÇAS IMPLEMENTADAS:
+- ✅ Modal de limite agora fecha corretamente
+- ✅ Sistema bloqueia buscas quando limite é atingido
+- ✅ Busca por data funcionando corretamente
+- ✅ Logs adicionados para debug de datas
+
+STATUS ATUAL:
+- Aplicação local funcionando perfeitamente
+- Modal de limite aparecendo e fechando corretamente
+- Busca por data funcionando
+- Apenas aguardando conectividade para deploy

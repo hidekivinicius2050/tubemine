@@ -678,15 +678,30 @@ export default function BuscadorPage() {
                // Adicionar datas apenas se foram fornecidas e com formato correto
                if (dateFrom) {
                  const fromDate = new Date(dateFrom + 'T00:00:00Z')
-                 params.append('publishedAfter', fromDate.toISOString())
+                 const publishedAfter = fromDate.toISOString()
+                 params.append('publishedAfter', publishedAfter)
+                 console.log('📅 Data início:', { original: dateFrom, processed: publishedAfter })
                }
                
                if (dateTo) {
                  const toDate = new Date(dateTo + 'T23:59:59Z')
-                 params.append('publishedBefore', toDate.toISOString())
+                 const publishedBefore = toDate.toISOString()
+                 params.append('publishedBefore', publishedBefore)
+                 console.log('📅 Data fim:', { original: dateTo, processed: publishedBefore })
                }
 
 
+               
+               console.log('🔍 Parâmetros da busca:', {
+                 keywords,
+                 language,
+                 country,
+                 dateFrom,
+                 dateTo,
+                 maxResults: currentPageMaxResults,
+                 publishedAfter: params.get('publishedAfter'),
+                 publishedBefore: params.get('publishedBefore')
+               })
                
                const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`)
                const data = await response.json()
