@@ -167,6 +167,15 @@ export default function AdminPage() {
 
   // Ações do usuário
   const handleUserAction = async (userId: number, action: string) => {
+    // Confirmação especial para remover plano PRO
+    if (action === 'remove-pro') {
+      const confirmed = confirm('⚠️ ATENÇÃO!\n\nTem certeza que deseja remover o plano PRO deste usuário?\n\nEsta ação irá:\n• Cancelar a assinatura no Stripe\n• Remover acesso a buscas ilimitadas\n• Rebaixar para plano gratuito\n\nEsta ação não pode ser desfeita facilmente.')
+      
+      if (!confirmed) {
+        return
+      }
+    }
+
     try {
       const response = await fetch(`/api/admin/users/${userId}/${action}`, {
         method: 'POST',
@@ -174,10 +183,21 @@ export default function AdminPage() {
       })
       
       if (response.ok) {
+        const data = await response.json()
+        
+        // Mostrar mensagem de sucesso
+        if (action === 'remove-pro') {
+          alert(`✅ ${data.message}`)
+        }
+        
         loadDashboardData() // Recarregar dados
+      } else {
+        const errorData = await response.json()
+        alert(`❌ Erro: ${errorData.error}`)
       }
     } catch (error) {
       console.error('Erro na ação:', error)
+      alert('❌ Erro ao executar ação')
     }
   }
 
@@ -445,8 +465,8 @@ export default function AdminPage() {
                         <td>{user.name}</td>
                         <td>{user.email}</td>
                         <td>
-                          <span className={`badge ${user.subscription?.plan_type === 'pro' ? 'premium' : 'free'}`}>
-                            {user.subscription?.plan_type === 'pro' ? 'Premium' : 'Gratuito'}
+                          <span className={`badge ${user.subscription?.plan_type === 'pro' && user.subscription?.status === 'active' ? 'premium' : 'free'}`}>
+                            {user.subscription?.plan_type === 'pro' && user.subscription?.status === 'active' ? 'Premium' : 'Gratuito'}
                           </span>
                         </td>
                         <td>
@@ -494,8 +514,8 @@ export default function AdminPage() {
                       <td>{user.name}</td>
                       <td>{user.email}</td>
                       <td>
-                        <span className={`badge ${user.subscription?.plan_type === 'pro' ? 'premium' : 'free'}`}>
-                          {user.subscription?.plan_type === 'pro' ? 'Premium' : 'Gratuito'}
+                        <span className={`badge ${user.subscription?.plan_type === 'pro' && user.subscription?.status === 'active' ? 'premium' : 'free'}`}>
+                          {user.subscription?.plan_type === 'pro' && user.subscription?.status === 'active' ? 'Premium' : 'Gratuito'}
                         </span>
                       </td>
                       <td>
@@ -510,10 +530,19 @@ export default function AdminPage() {
                           <button 
                             className="btn-small"
                             onClick={() => handleUserAction(user.id, 'upgrade')}
-                            disabled={user.subscription?.plan_type === 'pro'}
+                            disabled={user.subscription?.plan_type === 'pro' && user.subscription?.status === 'active'}
                           >
-                            {user.subscription?.plan_type === 'pro' ? 'Premium' : 'Upgrade'}
+                            {user.subscription?.plan_type === 'pro' && user.subscription?.status === 'active' ? 'Premium' : 'Upgrade'}
                           </button>
+                          {user.subscription?.plan_type === 'pro' && user.subscription?.status === 'active' && (
+                            <button 
+                              className="btn-small btn-danger"
+                              onClick={() => handleUserAction(user.id, 'remove-pro')}
+                              title="Remover plano PRO"
+                            >
+                              ❌ Remover PRO
+                            </button>
+                          )}
                           <button 
                             className="btn-small btn-warning"
                             onClick={() => openPasswordModal(user)}

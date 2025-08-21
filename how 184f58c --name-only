@@ -1,0 +1,5 @@
+[33m20bfb47[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix: Suspense wrapper para useSearchParams em reset-password
+[33m184f58c[m Fix: Adiciona logs para debug de busca por data
+[33m160b353[m Fix maxResults functionality and prepare for deployment - no secrets
+[33mffe6f8e[m Update deployment paths and repository links
+[33m18bf813[m Initial commit: TubeMine SaaS ready for production

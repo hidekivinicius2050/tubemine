@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '@/hooks/useAuth'
 import '@/styles/modal.css'
 
@@ -11,10 +11,48 @@ interface SubscriptionModalProps {
 }
 
 export default function SubscriptionModal({ isOpen, onClose, type }: SubscriptionModalProps) {
-  const { createCheckoutSession, subscription } = useAuth()
+  const { createCheckoutSession, subscription, refreshSubscription } = useAuth()
   const [loading, setLoading] = useState(false)
 
+  // Atualizar dados da subscription quando o modal é aberto
+  useEffect(() => {
+    if (isOpen && type === 'limit-reached') {
+      refreshSubscription()
+    }
+  }, [isOpen, type, refreshSubscription])
+
+  // Adicionar listener para tecla Escape
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        console.log('🔧 Tecla Escape pressionada, fechando modal...')
+        handleClose()
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape)
+      // Prevenir scroll do body
+      document.body.style.overflow = 'hidden'
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isOpen])
+
   if (!isOpen) return null
+
+  const handleClose = () => {
+    console.log('🔧 Tentando fechar modal...')
+    onClose()
+    // Forçar fechamento após um pequeno delay para garantir
+    setTimeout(() => {
+      console.log('🔧 Forçando fechamento do modal...')
+      onClose()
+    }, 50)
+  }
 
   const handleUpgrade = async () => {
     setLoading(true)
@@ -48,11 +86,11 @@ export default function SubscriptionModal({ isOpen, onClose, type }: Subscriptio
   }
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={handleClose}>
       <div className="modal-content subscription-modal" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
           <h2>{getTitle()}</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={handleClose}>×</button>
         </div>
 
         <div className="modal-body">

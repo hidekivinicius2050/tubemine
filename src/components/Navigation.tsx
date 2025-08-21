@@ -36,8 +36,16 @@ export default function Navigation() {
       <nav className="navigation">
         <div className="nav-content">
           <div className="nav-left">
-            <h2 className="nav-title">TubeMine</h2>
-            <span className="nav-subtitle">Buscador de Vídeos</span>
+            <div className="nav-logo-container">
+              <img 
+                src="https://i.postimg.cc/7htj7BtY/logo-tubeminer.png" 
+                alt="TubeMine Logo" 
+                className="nav-logo"
+              />
+              <div className="nav-text-container">
+                <h2 className="nav-title">TubeMine</h2>
+              </div>
+            </div>
           </div>
           
           <div className="nav-right">

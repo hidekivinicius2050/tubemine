@@ -39,6 +39,28 @@ export default function BuscadorPage() {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [hasShownWelcome, setHasShownWelcome] = useState(false)
+  const [userClosedLimitModal, setUserClosedLimitModal] = useState(() => {
+    // Verificar se o usuário fechou o modal recentemente
+    const closedAt = localStorage.getItem('modalClosedAt')
+    const wasClosed = localStorage.getItem('userClosedLimitModal')
+    
+    if (wasClosed && closedAt) {
+      const timeSinceClosed = Date.now() - parseInt(closedAt)
+      const oneHour = 60 * 60 * 1000
+      
+      if (timeSinceClosed < oneHour) {
+        console.log('🔧 Modal foi fechado recentemente, não reabrir')
+        return true
+      } else {
+        // Limpar dados expirados
+        localStorage.removeItem('userClosedLimitModal')
+        localStorage.removeItem('modalClosedAt')
+        return false
+      }
+    }
+    
+    return false
+  })
 
   useEffect(() => {
     // Forçar tema dark
@@ -52,7 +74,7 @@ export default function BuscadorPage() {
     }
 
     // Verificar se deve mostrar modal de limite
-    if (subscription?.plan === 'free' && subscription?.todaySearches >= 1) {
+    if (subscription?.plan === 'free' && subscription?.todaySearches >= 1 && !userClosedLimitModal && !showLimitModal) {
       setShowLimitModal(true)
     }
 
@@ -60,7 +82,7 @@ export default function BuscadorPage() {
     if (!window.fetchData) {
       loadBuscadorScript()
     }
-  }, [subscription, hasShownWelcome])
+  }, [subscription, hasShownWelcome, userClosedLimitModal, showLimitModal])
 
   const loadBuscadorScript = () => {
     console.log('🚀 Carregando script do buscador...')
@@ -590,7 +612,9 @@ export default function BuscadorPage() {
            const subData = await subResp.json()
 
            if (!subData.canSearch) {
-             setShowLimitModal(true)
+             if (!userClosedLimitModal) {
+               setShowLimitModal(true)
+             }
              hideLoading()
              return
            }
@@ -1636,6 +1660,18 @@ export default function BuscadorPage() {
 
   const handleCloseLimitModal = () => {
     setShowLimitModal(false)
+    setUserClosedLimitModal(true)
+    
+    // Salvar no localStorage para não reabrir por 1 hora
+    localStorage.setItem('userClosedLimitModal', 'true')
+    localStorage.setItem('modalClosedAt', Date.now().toString())
+    
+    // Limpar após 1 hora
+    setTimeout(() => {
+      localStorage.removeItem('userClosedLimitModal')
+      localStorage.removeItem('modalClosedAt')
+      setUserClosedLimitModal(false)
+    }, 60 * 60 * 1000)
   }
 
   return (
