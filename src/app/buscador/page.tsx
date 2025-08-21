@@ -40,6 +40,11 @@ export default function BuscadorPage() {
   const [showLimitModal, setShowLimitModal] = useState(false)
   const [hasShownWelcome, setHasShownWelcome] = useState(false)
   const [userClosedLimitModal, setUserClosedLimitModal] = useState(() => {
+    // Verificar se estamos no cliente
+    if (typeof window === 'undefined') {
+      return false
+    }
+    
     // Verificar se o usuário fechou o modal recentemente
     const closedAt = localStorage.getItem('modalClosedAt')
     const wasClosed = localStorage.getItem('userClosedLimitModal')
