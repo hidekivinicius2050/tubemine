@@ -5,9 +5,9 @@ const resend = new Resend(process.env.RESEND_API_KEY || 're_JA8LHWRb_6dGf4LANihd
 
 // Configurações de e-mail
 const EMAIL_CONFIG = {
-  FROM_EMAIL: 'noreply@tubemine.com.br',
+  FROM_EMAIL: 'onboarding@resend.dev', // Domínio verificado do Resend
   FROM_NAME: 'TubeMine',
-  REPLY_TO: 'contact@tubemine.com.br'
+  REPLY_TO: 'viniciushideki2050@gmail.com' // Email verificado
 }
 
 // Tipos de e-mail
