@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import { getDatabase } from '@/lib/database'
 import { createFreeSubscription } from '@/lib/stripe'
-// import { sendWelcomeEmail, isEmailConfigured } from '@/lib/email' // Desabilitado para economizar créditos
+import { sendEmail, isEmailConfigured } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,16 +67,21 @@ export async function POST(request: NextRequest) {
       [userId, token]
     )
 
-    // E-mail de boas-vindas desabilitado para economizar créditos
-    // if (isEmailConfigured()) {
-    //   try {
-    //     await sendWelcomeEmail(email, name, 'free')
-    //     console.log('✅ E-mail de boas-vindas enviado para:', email)
-    //   } catch (emailError) {
-    //     console.error('❌ Erro ao enviar e-mail de boas-vindas:', emailError)
-    //     // Não falha o registro se o e-mail falhar
-    //   }
-    // }
+    // Enviar e-mail de boas-vindas
+    if (isEmailConfigured()) {
+      try {
+        await sendEmail({
+          to: email,
+          toName: name,
+          type: 'welcome',
+          data: { name }
+        })
+        console.log('✅ E-mail de boas-vindas enviado para:', email)
+      } catch (emailError) {
+        console.error('❌ Erro ao enviar e-mail de boas-vindas:', emailError)
+        // Não falha o registro se o e-mail falhar
+      }
+    }
 
     return NextResponse.json({
       message: 'Usuário registrado com sucesso',
