@@ -166,11 +166,10 @@ export default function LoginPage() {
               Não tem uma conta? 
               <a href="/registro">Criar conta</a>
             </p>
-            {/* Funcionalidade de recuperação de senha temporariamente desabilitada */}
-            {/* <p>
+            <p>
               Esqueceu a senha? 
               <a href="/forgot-password">Recuperar senha</a>
-            </p> */}
+            </p>
           </div>
         </div>
       </div>
