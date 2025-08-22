@@ -408,6 +408,15 @@ export async function sendEmail(emailData: EmailData): Promise<boolean> {
       throw new Error(`Template de e-mail não encontrado para o tipo: ${emailData.type}`)
     }
 
+    // Em produção, só enviar para o email verificado
+    const isProduction = process.env.NODE_ENV === 'production'
+    const verifiedEmail = 'viniciushideki2050@gmail.com'
+    
+    if (isProduction && emailData.to !== verifiedEmail) {
+      console.log(`📧 Email redirecionado para ${verifiedEmail} (produção)`)
+      emailData.to = verifiedEmail
+    }
+
     const { data, error } = await resend.emails.send({
       from: `${EMAIL_CONFIG.FROM_NAME} <${EMAIL_CONFIG.FROM_EMAIL}>`,
       to: [emailData.to],
