@@ -447,8 +447,25 @@ body.dark-mode .title-cell a.link-btn.channel-link {
         <option value="ZA">África do Sul</option>
         <option value="PL">Polônia</option>
       </select>
-      <input type="date" id="startDate" />
-      <input type="date" id="endDate" />
+      <div class="date-range-container">
+        <div class="date-field">
+          <label for="startDate">Data Inicial</label>
+          <input type="date" id="startDate" />
+        </div>
+        <div class="date-field">
+          <label for="endDate">Data Final</label>
+          <input type="date" id="endDate" />
+        </div>
+        <div class="date-shortcuts">
+          <span class="shortcuts-label">Atalhos:</span>
+          <button type="button" class="date-shortcut" onclick="setDateRange('hoje')">Hoje</button>
+          <button type="button" class="date-shortcut" onclick="setDateRange('ontem')">Ontem</button>
+          <button type="button" class="date-shortcut" onclick="setDateRange('semana')">Última Semana</button>
+          <button type="button" class="date-shortcut" onclick="setDateRange('mes')">Último Mês</button>
+          <button type="button" class="date-shortcut" onclick="setDateRange('ano')">Último Ano</button>
+          <button type="button" class="date-shortcut" onclick="setDateRange('limpar')">Limpar</button>
+        </div>
+      </div>
       <input type="text" id="minViews" placeholder="Visualizações mínimas" />
       <input type="text" id="minLikes" placeholder="Likes mínimos" />
       <input type="text" id="minSubscribers" placeholder="Inscritos mínimos" />
@@ -609,6 +626,51 @@ body.dark-mode .title-cell a.link-btn.channel-link {
       document.getElementById('maxResults').value = Number(50).toLocaleString('pt-BR');
       document.querySelector('#resultsTable tbody').innerHTML = '';
       document.getElementById('errorMsg').style.display = 'none';
+    }
+
+    function setDateRange(type) {
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+      const today = new Date();
+      
+      function formatDate(date) {
+        return date.toISOString().split('T')[0];
+      }
+      
+      switch(type) {
+        case 'hoje':
+          startDateInput.value = formatDate(today);
+          endDateInput.value = formatDate(today);
+          break;
+        case 'ontem':
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
+          startDateInput.value = formatDate(yesterday);
+          endDateInput.value = formatDate(yesterday);
+          break;
+        case 'semana':
+          const weekAgo = new Date(today);
+          weekAgo.setDate(today.getDate() - 7);
+          startDateInput.value = formatDate(weekAgo);
+          endDateInput.value = formatDate(today);
+          break;
+        case 'mes':
+          const monthAgo = new Date(today);
+          monthAgo.setMonth(today.getMonth() - 1);
+          startDateInput.value = formatDate(monthAgo);
+          endDateInput.value = formatDate(today);
+          break;
+        case 'ano':
+          const yearAgo = new Date(today);
+          yearAgo.setFullYear(today.getFullYear() - 1);
+          startDateInput.value = formatDate(yearAgo);
+          endDateInput.value = formatDate(today);
+          break;
+        case 'limpar':
+          startDateInput.value = '';
+          endDateInput.value = '';
+          break;
+      }
     }
 
     function formatDuration(isoDuration) {

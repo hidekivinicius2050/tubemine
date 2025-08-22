@@ -39,8 +39,8 @@ async function createAdmin() {
     console.log('Usuário admin já existe!')
     console.log('Tentando atualizar a senha...')
     
-    // Criar hash da senha
-    const hashedPassword = await bcrypt.hash('admin123', 12)
+    // Criar hash da nova senha
+    const hashedPassword = await bcrypt.hash('b50x20Hi@', 12)
     
     // Atualizar senha do admin
     await db.run(
@@ -50,14 +50,14 @@ async function createAdmin() {
     
     console.log('Senha do admin atualizada!')
     console.log('Email: admin@tubemine.com')
-    console.log('Senha: admin123')
+    console.log('Senha: b50x20Hi@')
     
     await db.close()
     return
   }
 
-  // Criar hash da senha
-  const hashedPassword = await bcrypt.hash('admin123', 12)
+  // Criar hash da nova senha
+  const hashedPassword = await bcrypt.hash('b50x20Hi@', 12)
 
   // Inserir usuário admin
   const result = await db.run(
@@ -67,7 +67,7 @@ async function createAdmin() {
 
   console.log('Usuário admin criado com sucesso!')
   console.log('Email: admin@tubemine.com')
-  console.log('Senha: admin123')
+  console.log('Senha: b50x20Hi@')
   console.log('ID:', result.lastID)
 
   await db.close()

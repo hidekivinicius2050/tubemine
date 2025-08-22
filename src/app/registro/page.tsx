@@ -85,24 +85,11 @@ export default function RegistroPage() {
         throw new Error(data.error || 'Erro no registro')
       }
 
-      // Registro bem-sucedido - fazer login automático
-      if (data.token) {
-        localStorage.setItem('authToken', data.token)
-        showNotification('Conta criada com sucesso! Redirecionando...', 'success')
-        setTimeout(() => {
-          // Redirecionar baseado no role do usuário
-          if (data.user?.role === 'admin') {
-            router.push('/admin')
-          } else {
-            router.push('/buscador')
-          }
-        }, 1500)
-      } else {
-        showNotification('Conta criada com sucesso! Redirecionando para login...', 'success')
-        setTimeout(() => {
-          router.push('/login')
-        }, 2000)
-      }
+      // Registro bem-sucedido - redirecionar para login
+      showNotification('Conta criada com sucesso! Redirecionando para login...', 'success')
+      setTimeout(() => {
+        router.push('/login')
+      }, 2000)
       
     } catch (error: any) {
       showNotification(error.message, 'error')

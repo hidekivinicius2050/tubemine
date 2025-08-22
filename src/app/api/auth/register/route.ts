@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
 import { getDatabase } from '@/lib/database'
 import { createFreeSubscription } from '@/lib/stripe'
 import { sendEmail, isEmailConfigured } from '@/lib/email'
@@ -54,18 +53,8 @@ export async function POST(request: NextRequest) {
     // Criar assinatura gratuita inicial
     await createFreeSubscription(userId)
 
-    // Gerar token JWT
-    const token = jwt.sign(
-      { userId, email, name },
-      process.env.JWT_SECRET || 'your-secret-key',
-      { expiresIn: '7d' }
-    )
-
-    // Salvar sessão
-    await db.run(
-      'INSERT INTO user_sessions (user_id, token) VALUES (?, ?)',
-      [userId, token]
-    )
+    // NÃO gerar token JWT automaticamente
+    // O usuário deve fazer login manualmente após o registro
 
     // Enviar e-mail de boas-vindas
     if (isEmailConfigured()) {
@@ -84,8 +73,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: 'Usuário registrado com sucesso',
-      token,
+      message: 'Usuário registrado com sucesso! Faça login para continuar.',
       user: {
         id: userId,
         name,

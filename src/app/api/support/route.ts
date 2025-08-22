@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import jwt from 'jsonwebtoken'
 import { getDatabase } from '@/lib/database'
+import { sendEmail, isEmailConfigured } from '@/lib/email'
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key'
 
@@ -105,15 +106,25 @@ export async function POST(request: NextRequest) {
     console.log('Data:', new Date().toISOString())
     console.log('================================')
 
-    // Em produção, aqui você enviaria um email para o suporte
-    // await sendSupportEmail({
-    //   ticketId: result.lastID,
-    //   user: user.name,
-    //   email: user.email,
-    //   category,
-    //   subject,
-    //   message
-    // })
+    // Enviar e-mail de confirmação para o usuário
+    if (isEmailConfigured()) {
+      try {
+        await sendEmail({
+          to: user.email,
+          toName: user.name,
+          type: 'support_request',
+          data: {
+            name: user.name,
+            subject: subject,
+            message: message,
+            ticketId: result.lastID
+          }
+        })
+        console.log('✅ E-mail de confirmação de suporte enviado para:', user.email)
+      } catch (emailError) {
+        console.error('❌ Erro ao enviar e-mail de confirmação de suporte:', emailError)
+      }
+    }
 
     return NextResponse.json(
       { 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { getDatabase } from '@/lib/database'
+import { sendEmail, isEmailConfigured } from '@/lib/email'
 
 export async function POST(request: NextRequest) {
   const body = await request.text()
@@ -81,6 +82,17 @@ async function handleCheckoutSessionCompleted(session: any, db: any) {
     return
   }
 
+  // Buscar dados do usuário
+  const user = await db.get(
+    'SELECT name, email FROM users WHERE id = ?',
+    [userId]
+  )
+
+  if (!user) {
+    console.error('Usuário não encontrado:', userId)
+    return
+  }
+
   // Calcular data de validade (30 dias)
   const validUntil = new Date()
   validUntil.setDate(validUntil.getDate() + 30)
@@ -93,6 +105,24 @@ async function handleCheckoutSessionCompleted(session: any, db: any) {
   `, [userId, subscriptionId, customerId, validUntil.toISOString()])
 
   console.log(`Assinatura PRO ativada para usuário ${userId}`)
+
+  // Enviar e-mail de agradecimento PRO
+  if (isEmailConfigured()) {
+    try {
+      await sendEmail({
+        to: user.email,
+        toName: user.name,
+        type: 'thank_you_pro',
+        data: { 
+          name: user.name,
+          nextBillingDate: validUntil.toLocaleDateString('pt-BR')
+        }
+      })
+      console.log('✅ E-mail de agradecimento PRO enviado para:', user.email)
+    } catch (emailError) {
+      console.error('❌ Erro ao enviar e-mail de agradecimento PRO:', emailError)
+    }
+  }
 }
 
 async function handleInvoicePaid(invoice: any, db: any) {
@@ -106,7 +136,7 @@ async function handleInvoicePaid(invoice: any, db: any) {
 
   // Buscar usuário pelo customer_id
   const user = await db.get(
-    'SELECT id FROM users WHERE stripe_customer_id = ?',
+    'SELECT id, name, email FROM users WHERE stripe_customer_id = ?',
     [customerId]
   )
 
@@ -127,6 +157,24 @@ async function handleInvoicePaid(invoice: any, db: any) {
   `, [validUntil.toISOString(), subscriptionId])
 
   console.log(`Renovação PRO processada para usuário ${user.id}`)
+
+  // Enviar e-mail de confirmação de renovação
+  if (isEmailConfigured()) {
+    try {
+      await sendEmail({
+        to: user.email,
+        toName: user.name,
+        type: 'subscription_confirmation',
+        data: { 
+          name: user.name,
+          nextBillingDate: validUntil.toLocaleDateString('pt-BR')
+        }
+      })
+      console.log('✅ E-mail de confirmação de renovação enviado para:', user.email)
+    } catch (emailError) {
+      console.error('❌ Erro ao enviar e-mail de confirmação de renovação:', emailError)
+    }
+  }
 }
 
 async function handleSubscriptionUpdated(subscription: any, db: any) {
