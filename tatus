@@ -1,0 +1,5 @@
+[33m7f9b210[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Fix: localStorage error no servidor
+[33mf6776c3[m Reaplicar todas as mudanças: modal de limite, Resend, estilos de data, logo, admin panel
+[33m20bfb47[m Fix: Suspense wrapper para useSearchParams em reset-password
+[33m184f58c[m Fix: Adiciona logs para debug de busca por data
+[33m160b353[m Fix maxResults functionality and prepare for deployment - no secrets

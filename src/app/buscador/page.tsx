@@ -618,7 +618,7 @@ export default function BuscadorPage() {
 
            if (!subData.canSearch) {
              if (!userClosedLimitModal) {
-               setShowLimitModal(true)
+             setShowLimitModal(true)
              }
              hideLoading()
              return
@@ -1653,8 +1653,40 @@ export default function BuscadorPage() {
        console.log('✅ Todos os event listeners configurados')
      }
      
-          // Iniciar configuração dos event listeners com delay
-     setTimeout(setupEventListeners, 200)
+     // Configurar atalhos de data
+     const setupDateShortcuts = () => {
+       console.log('📅 Configurando atalhos de data...')
+       
+       const shortcuts = document.querySelectorAll('.date-shortcut')
+       shortcuts.forEach(shortcut => {
+         shortcut.addEventListener('click', () => {
+           const days = parseInt(shortcut.getAttribute('data-days') || '7')
+           const endDate = new Date()
+           const startDate = new Date()
+           startDate.setDate(endDate.getDate() - days)
+           
+           const dateFromInput = document.getElementById('dateFrom') as HTMLInputElement
+           const dateToInput = document.getElementById('dateTo') as HTMLInputElement
+           
+           if (dateFromInput && dateToInput) {
+             dateFromInput.value = startDate.toISOString().split('T')[0]
+             dateToInput.value = endDate.toISOString().split('T')[0]
+             
+             console.log(`📅 Atalho aplicado: ${days} dias atrás`)
+             console.log(`📅 Data início: ${dateFromInput.value}`)
+             console.log(`📅 Data fim: ${dateToInput.value}`)
+           }
+         })
+       })
+       
+       console.log('✅ Atalhos de data configurados')
+     }
+     
+     // Iniciar configuração dos event listeners com delay
+     setTimeout(() => {
+       setupEventListeners()
+       setupDateShortcuts()
+     }, 200)
 
     console.log('✅ Script do buscador carregado com sucesso!')
   }
@@ -2233,16 +2265,45 @@ export default function BuscadorPage() {
                   <option value="ZM">Zâmbia</option>
                   <option value="ZW">Zimbábue</option>
                 </select>
-               <input
-                 type="date"
-                 id="dateFrom"
-                 placeholder="Data inicial"
-               />
-               <input
-                 type="date"
-                 id="dateTo"
-                 placeholder="Data final"
-               />
+                <select id="shorts">
+                  <option value="">Todos os vídeos</option>
+                  <option value="no">Excluir Shorts</option>
+                  <option value="yes">Incluir Shorts</option>
+                </select>
+                
+                {/* Campos de data com design melhorado */}
+                <div className="date-range-container">
+                  <div className="date-field">
+                    <label className="date-label">Data Início</label>
+                    <input
+                      type="date"
+                      id="dateFrom"
+                      className="date-input"
+                      placeholder="Data inicial"
+                    />
+                    <small className="date-hint">Selecione a data de início</small>
+                  </div>
+                  <div className="date-field">
+                    <label className="date-label">Data Fim</label>
+                    <input
+                      type="date"
+                      id="dateTo"
+                      className="date-input"
+                      placeholder="Data final"
+                    />
+                    <small className="date-hint">Selecione a data de fim</small>
+                  </div>
+                  
+                  {/* Atalhos rápidos de data */}
+                  <div className="date-shortcuts">
+                    <span className="shortcuts-label">Atalhos:</span>
+                    <button type="button" className="date-shortcut" data-days="7">Últimos 7 dias</button>
+                    <button type="button" className="date-shortcut" data-days="30">Últimos 30 dias</button>
+                    <button type="button" className="date-shortcut" data-days="90">Últimos 3 meses</button>
+                    <button type="button" className="date-shortcut" data-days="365">Último ano</button>
+                  </div>
+                </div>
+                
                <input
                  type="number"
                  id="minViews"
@@ -2263,11 +2324,6 @@ export default function BuscadorPage() {
                    id="maxSubscribers"
                    placeholder="Inscritos máximos"
                  />
-                 <select id="shorts">
-                   <option value="">Todos os vídeos</option>
-                   <option value="no">Excluir Shorts</option>
-                   <option value="yes">Incluir Shorts</option>
-                 </select>
                <button type="button" id="searchBtn" className="primary">
                  Buscar
                </button>
