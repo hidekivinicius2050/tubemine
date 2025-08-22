@@ -201,34 +201,34 @@ export default function AdminPage() {
     }
   }
 
-  // Função de notificação desabilitada para economizar créditos
-  // const handleSendNotification = async (e: React.FormEvent) => {
-  //   e.preventDefault()
-  //   
-  //   try {
-  //     const response = await fetch('/api/admin/notifications', {
-  //       method: 'POST',
-  //       headers: { 
-  //         'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-  //         'Content-Type': 'application/json'
-  //       },
-  //       body: JSON.stringify(notificationData)
-  //     })
-  //   
-  //     const result = await response.json()
-  //   
-  //     if (response.ok) {
-  //       alert('✅ Notificação enviada com sucesso!')
-  //       setShowNotificationModal(false)
-  //       setNotificationData({ title: '', message: '', adminEmail: '' })
-  //     } else {
-  //       alert(`❌ Erro: ${result.error}`)
-  //     }
-  //   } catch (error) {
-  //     console.error('Erro ao enviar notificação:', error)
-  //     alert('❌ Erro ao enviar notificação')
-  //   }
-  // }
+  // Função para enviar notificação
+  const handleSendNotification = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    try {
+      const response = await fetch('/api/admin/notifications', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(notificationData)
+      })
+    
+      const result = await response.json()
+    
+      if (response.ok) {
+        alert('✅ Notificação enviada com sucesso!')
+        setShowNotificationModal(false)
+        setNotificationData({ title: '', message: '', adminEmail: '' })
+      } else {
+        alert(`❌ Erro: ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Erro ao enviar notificação:', error)
+      alert('❌ Erro ao enviar notificação')
+    }
+  }
 
   // Função para abrir modal de alterar senha
   const openPasswordModal = (user: User) => {
