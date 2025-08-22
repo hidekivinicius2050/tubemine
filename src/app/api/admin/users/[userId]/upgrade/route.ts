@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/database'
-// import { sendSubscriptionUpgradedEmail, isEmailConfigured } from '@/lib/email' // Desabilitado para economizar créditos
+import { sendEmail, isEmailConfigured } from '@/lib/email'
 
 export async function POST(
   request: NextRequest,
@@ -71,16 +71,25 @@ export async function POST(
       VALUES (?, 'pro', 'active', ?, datetime('now'), datetime('now'))
     `, [userId, validUntil.toISOString()])
 
-    // E-mail de upgrade desabilitado para economizar créditos
-    // if (isEmailConfigured()) {
-    //   try {
-    //     await sendSubscriptionUpgradedEmail(user.email, user.name, validUntil.toISOString())
-    //     console.log('✅ E-mail de upgrade enviado para:', user.email)
-    //   } catch (emailError) {
-    //     console.error('❌ Erro ao enviar e-mail de upgrade:', emailError)
-    //     // Não falha o upgrade se o e-mail falhar
-    //   }
-    // }
+    // Enviar e-mail de upgrade
+    if (isEmailConfigured()) {
+      try {
+        await sendEmail({
+          to: user.email,
+          toName: user.name,
+          type: 'subscription_confirmation',
+          data: {
+            name: user.name,
+            planType: 'PRO',
+            validUntil: validUntil.toISOString()
+          }
+        })
+        console.log('✅ E-mail de upgrade enviado para:', user.email)
+      } catch (emailError) {
+        console.error('❌ Erro ao enviar e-mail de upgrade:', emailError)
+        // Não falha o upgrade se o e-mail falhar
+      }
+    }
 
     return NextResponse.json({
       success: true,

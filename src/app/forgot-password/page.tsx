@@ -25,32 +25,26 @@ export default function ForgotPasswordPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!email) {
-      showNotification('Por favor, digite seu e-mail', 'error')
-      return
-    }
-
     setIsLoading(true)
 
     try {
       const response = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
       })
 
       const data = await response.json()
 
       if (response.ok) {
-        showNotification('E-mail de recuperação enviado! Verifique sua caixa de entrada.', 'success')
+        showNotification(data.message || 'Se o email estiver cadastrado, você receberá um link de recuperação', 'success')
         setEmail('')
       } else {
-        showNotification(data.error || 'Erro ao enviar e-mail de recuperação', 'error')
+        showNotification(data.error || 'Erro ao enviar email de recuperação', 'error')
       }
-    } catch (error) {
+    } catch (error: any) {
       showNotification('Erro interno do servidor', 'error')
     } finally {
       setIsLoading(false)
@@ -59,7 +53,16 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="container">
-      {/* COLUNA ESQUERDA - FUNCIONALIDADE DESABILITADA */}
+      {/* Notification */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        isVisible={notification.show}
+        onClose={hideNotification}
+        duration={notification.type === 'success' ? 5000 : 5000}
+      />
+
+      {/* COLUNA ESQUERDA - RECUPERAÇÃO */}
       <div className="login-section">
         {/* Logo */}
         <div className="logo">
@@ -70,11 +73,11 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
         
-        {/* Card de Funcionalidade Desabilitada */}
+        {/* Card de Recuperação */}
         <div className="login-card">
           <div className="login-header">
-            <h2>Funcionalidade Temporariamente Indisponível</h2>
-            <p>A recuperação de senha por e-mail está temporariamente desabilitada</p>
+            <h2>Recuperar Senha</h2>
+            <p>Digite seu email para receber um link de recuperação</p>
           </div>
           
           {/* Badges */}
@@ -99,28 +102,39 @@ export default function ForgotPasswordPage() {
             </div>
           </div>
           
-          {/* Mensagem de Indisponibilidade */}
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '30px 20px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            margin: '20px 0',
-            border: '1px solid #e9ecef'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '15px' }}>🔧</div>
-            <h3 style={{ color: '#6c757d', marginBottom: '10px' }}>Em Manutenção</h3>
-            <p style={{ color: '#6c757d', lineHeight: '1.6' }}>
-              Estamos trabalhando para implementar um novo sistema de recuperação de senha.
-              <br />
-              <strong>Em breve estará disponível novamente!</strong>
-            </p>
-          </div>
+          {/* Formulário */}
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="email">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                </svg>
+                <span>Email</span>
+              </label>
+              <input 
+                type="email" 
+                id="email" 
+                className="form-input" 
+                placeholder="seu@email.com" 
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required 
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="login-btn" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Enviando...' : 'Enviar Link de Recuperação'}
+            </button>
+          </form>
           
           {/* Links */}
           <div className="links">
             <p>
-              <a href="/">Voltar ao Login</a>
+              <a href="/login">Voltar ao Login</a>
             </p>
             <p>
               Não tem uma conta? 
@@ -133,8 +147,8 @@ export default function ForgotPasswordPage() {
       {/* COLUNA DIREITA - FEATURES */}
       <div className="features-section">
         <div className="features-header">
-          <h2>Em Breve</h2>
-          <p>Nova funcionalidade de recuperação de senha</p>
+          <h2>Recuperação Segura</h2>
+          <p>Sistema completo de recuperação de senha</p>
         </div>
         
         <div className="features-grid">
@@ -146,7 +160,7 @@ export default function ForgotPasswordPage() {
             </div>
             <div className="feature-content">
               <h3>Segurança Total</h3>
-              <p>Novo sistema de recuperação seguro</p>
+              <p>Tokens únicos e seguros</p>
             </div>
           </div>
           
@@ -158,7 +172,7 @@ export default function ForgotPasswordPage() {
             </div>
             <div className="feature-content">
               <h3>Processo Rápido</h3>
-              <p>Recuperação instantânea de senha</p>
+              <p>Recuperação em poucos minutos</p>
             </div>
           </div>
           
@@ -181,8 +195,8 @@ export default function ForgotPasswordPage() {
               </svg>
             </div>
             <div className="feature-content">
-              <h3>Disponível em Breve</h3>
-              <p>Estamos trabalhando para você</p>
+              <h3>100% Funcional</h3>
+              <p>Sistema completo e ativo</p>
             </div>
           </div>
         </div>

@@ -60,7 +60,7 @@ export default function AdminPage() {
   const [searchLogs, setSearchLogs] = useState<SearchLog[]>([])
   const [activeTab, setActiveTab] = useState('dashboard')
   const [loadingData, setLoadingData] = useState(false)
-  // const [showNotificationModal, setShowNotificationModal] = useState(false) // Desabilitado para economizar créditos
+  const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [notificationData, setNotificationData] = useState({
     title: '',
     message: '',
@@ -371,14 +371,13 @@ export default function AdminPage() {
            >
              Logs de Busca
            </button>
-                     {/* Botão de notificação desabilitado para economizar créditos */}
-          {/* <button 
+                     <button 
             className="btn-secondary"
             onClick={() => setShowNotificationModal(true)}
             style={{ marginLeft: 'auto' }}
           >
             📧 Enviar Notificação
-          </button> */}
+          </button>
          </div>
 
         {/* Dashboard */}
@@ -606,8 +605,8 @@ export default function AdminPage() {
            </div>
          )}
 
-         {/* Modal de Notificação - Desabilitado para economizar créditos */}
-         {/* {showNotificationModal && (
+         {/* Modal de Notificação */}
+         {showNotificationModal && (
            <div className="modal-overlay">
              <div className="modal-content">
                <div className="modal-header">
@@ -678,7 +677,7 @@ export default function AdminPage() {
                </form>
              </div>
            </div>
-         )} */}
+         )}
 
          {/* Modal de Alterar Senha */}
          {showPasswordModal && selectedUser && (

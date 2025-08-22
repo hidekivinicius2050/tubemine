@@ -178,7 +178,16 @@ function ResetPasswordContent() {
 
   return (
     <div className="container">
-      {/* COLUNA ESQUERDA - FUNCIONALIDADE DESABILITADA */}
+      {/* Notification */}
+      <Notification
+        message={notification.message}
+        type={notification.type}
+        isVisible={notification.show}
+        onClose={hideNotification}
+        duration={notification.type === 'success' ? 3000 : 5000}
+      />
+
+      {/* COLUNA ESQUERDA - RESET */}
       <div className="login-section">
         {/* Logo */}
         <div className="logo">
@@ -189,11 +198,11 @@ function ResetPasswordContent() {
           </div>
         </div>
         
-        {/* Card de Funcionalidade Desabilitada */}
+        {/* Card de Reset */}
         <div className="login-card">
           <div className="login-header">
-            <h2>Funcionalidade Temporariamente Indisponível</h2>
-            <p>A recuperação de senha por e-mail está temporariamente desabilitada</p>
+            <h2>Redefinir Senha</h2>
+            <p>Digite sua nova senha para continuar</p>
           </div>
           
           {/* Badges */}
@@ -218,33 +227,62 @@ function ResetPasswordContent() {
             </div>
           </div>
           
-          {/* Mensagem de Indisponibilidade */}
-          <div style={{ 
-            textAlign: 'center', 
-            padding: '30px 20px',
-            backgroundColor: '#f8f9fa',
-            borderRadius: '8px',
-            margin: '20px 0',
-            border: '1px solid #e9ecef'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '15px' }}>🔧</div>
-            <h3 style={{ color: '#6c757d', marginBottom: '10px' }}>Em Manutenção</h3>
-            <p style={{ color: '#6c757d', lineHeight: '1.6' }}>
-              Estamos trabalhando para implementar um novo sistema de recuperação de senha.
-              <br />
-              <strong>Em breve estará disponível novamente!</strong>
-            </p>
-          </div>
+          {/* Formulário */}
+          <form onSubmit={handleSubmit}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="newPassword">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                </svg>
+                <span>Nova Senha</span>
+              </label>
+              <input 
+                type="password" 
+                id="newPassword" 
+                className="form-input" 
+                placeholder="••••••••" 
+                value={formData.newPassword}
+                onChange={(e) => setFormData({...formData, newPassword: e.target.value})}
+                required 
+              />
+            </div>
+            
+            <div className="form-group">
+              <label className="form-label" htmlFor="confirmPassword">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                </svg>
+                <span>Confirmar Senha</span>
+              </label>
+              <input 
+                type="password" 
+                id="confirmPassword" 
+                className="form-input" 
+                placeholder="••••••••" 
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+                required 
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="login-btn" 
+              disabled={isLoading}
+            >
+              {isLoading ? 'Redefinindo...' : 'Redefinir Senha'}
+            </button>
+          </form>
           
           {/* Links */}
           <div className="links">
-                         <p>
-               <a href="/login">Voltar ao Login</a>
-             </p>
-             <p>
-               Não tem uma conta? 
-               <a href="/registro">Criar conta</a>
-             </p>
+            <p>
+              <a href="/login">Voltar ao Login</a>
+            </p>
+            <p>
+              Não tem uma conta? 
+              <a href="/registro">Criar conta</a>
+            </p>
           </div>
         </div>
       </div>
@@ -252,8 +290,8 @@ function ResetPasswordContent() {
       {/* COLUNA DIREITA - FEATURES */}
       <div className="features-section">
         <div className="features-header">
-          <h2>Em Breve</h2>
-          <p>Nova funcionalidade de recuperação de senha</p>
+          <h2>Redefinição Segura</h2>
+          <p>Processo completo para redefinir sua senha</p>
         </div>
         
         <div className="features-grid">
@@ -265,7 +303,7 @@ function ResetPasswordContent() {
             </div>
             <div className="feature-content">
               <h3>Segurança Total</h3>
-              <p>Novo sistema de recuperação seguro</p>
+              <p>Senha criptografada e segura</p>
             </div>
           </div>
           
@@ -277,7 +315,7 @@ function ResetPasswordContent() {
             </div>
             <div className="feature-content">
               <h3>Processo Rápido</h3>
-              <p>Recuperação instantânea de senha</p>
+              <p>Redefinição em poucos segundos</p>
             </div>
           </div>
           
@@ -300,8 +338,8 @@ function ResetPasswordContent() {
               </svg>
             </div>
             <div className="feature-content">
-              <h3>Disponível em Breve</h3>
-              <p>Estamos trabalhando para você</p>
+              <h3>100% Funcional</h3>
+              <p>Sistema completo e ativo</p>
             </div>
           </div>
         </div>
