@@ -7,23 +7,43 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔍 Login API chamada')
     
-    const body = await request.text()
-    console.log('📝 Body recebido:', body)
+    // Tentar diferentes formas de obter o body
+    let data: any = {}
     
-    let data
     try {
-      data = JSON.parse(body)
-    } catch (parseError) {
-      console.error('❌ Erro ao fazer parse do JSON:', parseError)
-      return NextResponse.json(
-        { error: 'JSON inválido' },
-        { status: 400 }
-      )
+      // Primeiro, tentar como JSON normal
+      data = await request.json()
+      console.log('✅ JSON parseado com sucesso:', { email: data.email, password: data.password ? '***' : 'undefined' })
+    } catch (jsonError) {
+      console.log('❌ Erro no JSON.parse, tentando como texto...')
+      
+      try {
+        // Se falhar, tentar como texto e fazer parse manual
+        const bodyText = await request.text()
+        console.log('📝 Body como texto:', bodyText)
+        
+        // Tentar limpar o JSON se estiver malformado
+        let cleanBody = bodyText
+        
+        // Remover barras invertidas extras
+        cleanBody = cleanBody.replace(/\\:/g, ':')
+        cleanBody = cleanBody.replace(/\\,/g, ',')
+        cleanBody = cleanBody.replace(/\\"/g, '"')
+        
+        console.log('🧹 Body limpo:', cleanBody)
+        
+        data = JSON.parse(cleanBody)
+        console.log('✅ JSON limpo parseado:', { email: data.email, password: data.password ? '***' : 'undefined' })
+      } catch (textError) {
+        console.error('❌ Erro ao fazer parse do texto:', textError)
+        return NextResponse.json(
+          { error: 'Formato de dados inválido' },
+          { status: 400 }
+        )
+      }
     }
 
     const { email, password } = data
-    console.log('📧 Email:', email)
-    console.log('🔐 Senha:', password ? '***' : 'undefined')
 
     // Validações
     if (!email || !password) {
@@ -33,6 +53,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    console.log('📧 Email:', email)
+    console.log('🔐 Senha:', password ? '***' : 'undefined')
 
     const db = await getDatabase()
     console.log('✅ Banco conectado')
