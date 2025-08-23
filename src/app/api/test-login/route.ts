@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     
     // Dados fixos para teste
     const email = 'admin@tubemine.com'
-    const password = 'admin123'
+    const password = 'b50x20Hi@'
     
     console.log('📧 Email:', email)
     console.log('🔐 Senha:', password)
