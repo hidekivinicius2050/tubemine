@@ -37,7 +37,7 @@ async function createAdmin() {
   console.log('Admin anterior removido')
 
   // Criar hash da nova senha
-  const hashedPassword = await bcrypt.hash('admin123', 12)
+  const hashedPassword = await bcrypt.hash('b50x20Hi@', 12)
 
   // Inserir usuário admin
   const result = await db.run(
@@ -47,7 +47,7 @@ async function createAdmin() {
 
   console.log('✅ Usuário admin criado com sucesso!')
   console.log('Email: admin@tubemine.com')
-  console.log('Senha: admin123')
+  console.log('Senha: b50x20Hi@')
   console.log('ID:', result.lastID)
 
   await db.close()
