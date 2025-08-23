@@ -5,10 +5,29 @@ import { getDatabase } from '@/lib/database'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json()
+    console.log('🔍 Login API chamada')
+    
+    const body = await request.text()
+    console.log('📝 Body recebido:', body)
+    
+    let data
+    try {
+      data = JSON.parse(body)
+    } catch (parseError) {
+      console.error('❌ Erro ao fazer parse do JSON:', parseError)
+      return NextResponse.json(
+        { error: 'JSON inválido' },
+        { status: 400 }
+      )
+    }
+
+    const { email, password } = data
+    console.log('📧 Email:', email)
+    console.log('🔐 Senha:', password ? '***' : 'undefined')
 
     // Validações
     if (!email || !password) {
+      console.log('❌ Email ou senha faltando')
       return NextResponse.json(
         { error: 'Email e senha são obrigatórios' },
         { status: 400 }
@@ -16,6 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const db = await getDatabase()
+    console.log('✅ Banco conectado')
 
     // Buscar usuário
     const user = await db.get(
@@ -24,21 +44,27 @@ export async function POST(request: NextRequest) {
     )
 
     if (!user) {
+      console.log('❌ Usuário não encontrado')
       return NextResponse.json(
         { error: 'Email ou senha inválidos' },
         { status: 401 }
       )
     }
+
+    console.log('✅ Usuário encontrado:', user.email, user.role)
 
     // Verificar senha
     const isValidPassword = await bcrypt.compare(password, user.password_hash)
 
     if (!isValidPassword) {
+      console.log('❌ Senha inválida')
       return NextResponse.json(
         { error: 'Email ou senha inválidos' },
         { status: 401 }
       )
     }
+
+    console.log('✅ Senha válida')
 
     // Gerar token JWT
     const token = jwt.sign(
@@ -53,6 +79,8 @@ export async function POST(request: NextRequest) {
       [user.id, token]
     )
 
+    console.log('✅ Login bem-sucedido para:', user.email)
+
     return NextResponse.json({
       message: 'Login realizado com sucesso',
       token,
@@ -65,7 +93,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Erro no login:', error)
+    console.error('❌ Erro no login:', error)
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }

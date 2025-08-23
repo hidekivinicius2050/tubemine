@@ -1,9 +1,9 @@
 module.exports = {
   apps: [
     {
-      name: 'tubemine-saas',
-      script: 'npm',
-      args: 'start',
+      name: 'tubemine',
+      script: 'node',
+      args: '.next/standalone/server.js',
       cwd: '/var/www/tubemine',
       instances: 1,
       autorestart: true,
