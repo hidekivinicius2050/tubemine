@@ -679,6 +679,26 @@ body.dark-mode .title-cell a.link-btn.channel-link {
       const [, h, m, s] = match.map(x => parseInt(x) || 0);
       return `${h ? h + ':' : ''}${(h && m < 10 ? '0' : '') + m}:${s < 10 ? '0' + s : s}`;
     }
+
+    // Função para converter duração para segundos
+    function convertDurationToSeconds(duration) {
+      if (!duration || duration === 'N/D') return 0;
+      const parts = duration.split(':');
+      if (parts.length === 2) {
+        // Formato MM:SS
+        return parseInt(parts[0]) * 60 + parseInt(parts[1]);
+      } else if (parts.length === 3) {
+        // Formato HH:MM:SS
+        return parseInt(parts[0]) * 3600 + parseInt(parts[1]) * 60 + parseInt(parts[2]);
+      }
+      return 0;
+    }
+
+    // Função para verificar se é um short (menos de 3 minutos)
+    function isShort(duration) {
+      const seconds = convertDurationToSeconds(duration);
+      return seconds < 180; // 3 minutos = 180 segundos
+    }
     
     // Função para mostrar loading
     function showLoading(message = 'Buscando Vídeos...') {
@@ -885,7 +905,13 @@ body.dark-mode .title-cell a.link-btn.channel-link {
 	  channelTitle: s.snippet?.channelTitle || 'N/D',
 	  channelId: s.snippet?.channelId || 'N/D',
 	  subscribers: channelSubscribersMap.get(s.snippet.channelId) || 0
-        })).filter(v => v.views >= minViews && v.likes >= minLikes && v.subscribers >= minSubscribers && (maxSubscribers === 0 || v.subscribers <= maxSubscribers));
+        })).filter(v => 
+          v.views >= minViews && 
+          v.likes >= minLikes && 
+          v.subscribers >= minSubscribers && 
+          (maxSubscribers === 0 || v.subscribers <= maxSubscribers) &&
+          !isShort(v.duration) // Excluir shorts com menos de 3 minutos
+        );
 
         cache[cacheId] = { data: videos, timestamp: Date.now() };
         localStorage.setItem(cacheKey, JSON.stringify(cache));

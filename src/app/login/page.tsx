@@ -62,7 +62,17 @@ export default function LoginPage() {
       <div className="login-section">
         {/* Logo */}
         <div className="logo">
-          <img src="/logo-tubeminer.png" alt="TubeMine" />
+          <img 
+            src="/logo-tubeminer.png" 
+            alt="TubeMine" 
+            style={{
+              width: '80px',
+              height: '80px',
+              objectFit: 'contain',
+              borderRadius: '12px',
+              boxShadow: '0 4px 20px rgba(255, 68, 68, 0.3)'
+            }}
+          />
           <div className="logo-text">
             <h1>TubeMine</h1>
             <p>Video Analytics Platform</p>
